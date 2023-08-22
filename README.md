@@ -2,18 +2,24 @@
 
 ## Description
 
+This repository contains the R code for a de novo cost-effectiveness microsimulation.  
+**Population:** Moderate-to-severe haemophilia B  
+**Intervention:** Etranacogene Dezaparvovec (ED)  
+**Comparator:** Prophylactic extended half-life factor IX (EHL-FIX)  
+**Outcomes:** Discounted life years, quality-adjusted life years, costs, incremental cost-effectiveness ratio, incremental net monetary benefit  
 
+A publication of the work based on this model can be found at: [PENDING]
 
-
+I have uploaded the model with all required R code and data for the sake of transparency and as a resource for future modellers. 
+If interested, please feel free to develop the model further, e.g., by adding further treatment strategies, sources of costs, or other data sources.
 
 ## Installation
-These files can be downladed and then run by a suitable version of R. The model was mainly developed in R 4.2.1 but should be compatible with future version, as long as the required packages do not change.  
+These files can be downladed and then run by a suitable version of R. The model was mainly developed in R 4.2.1 but should be compatible with future versions, as long as the required packages do not change.  
 The following packages (and their dependencies) are required: ggplot2, RColorBrewer, pander, data.table, lookup, truncnorm, ggpubr, plyr, ggrepel, captioner, rmarkdown  
 These packages are installed and loaded in automatically when running the '00_master_file.R' script.  
 
 ## Usage
-
-This section is intended as a brief overview for the operation of the R code used to perform the simulation of the HB cost-effectiveness model. It assumes prior familiarity with R. We will first describe the basic structure of the folder and their contents, followed by descriptions of the main scripts which execute the model, and conclude by describing the functions which are used by these scripts, and which contain most of the actual cost-effectiveness modelling in their code.
+This section is intended as a brief overview for the operation of the R code used to perform the simulation. It assumes prior familiarity with R. We will first describe the basic structure of the folder and their contents, followed by descriptions of the main scripts which execute the model, and conclude by describing the functions which are used by these scripts, and which contain most of the actual cost-effectiveness modelling in their code.
 
 ### Folders and files
 
@@ -45,14 +51,14 @@ These scripts, rather than duplicating the code for the model across the scripts
 
 The functions are loaded into R in the 00_master_file.R script. Most of these functions should be run sequentially to perform the model. Each of these functions performs a particular task, which is described below.  
 
-* *Functions to prepare model:* * these functions must be run first as a preliminary step to create the necessary data structures, introduce data into the model, sample parameters, and define assumptions.  
+ *Functions to prepare model:*  these functions must be run first as a preliminary step to create the necessary data structures, introduce data into the model, sample parameters, and define assumptions.  
 •	**fun_model_setup.R:** This function requires the user to determine the cycle length, the number of cycles, the number of patients, the number of simulations (for probabilistic analysis), the treatments, and the willingness-to-pay threshold. Based on these inputs, the function creates a list to serve as the container for the relevant data, including the 3-dimensional arrays required to hold the patient data in the simulation. It also defines which measures (the second dimension of the array) are tracked by the model over time. If the user wishes to edit or add measures to the model, it should be done via this function, though changing the names of measures can cause errors if these names are not also adjusted in subsequent functions.  
 •	**fun_parameter_baseline.R:** This function introduces the parameter values from assumptions and literature into the model, including base case values and further variables (standard deviations, standard errors, sample sizes, etc.) needed for the probabilistic simulation. The source of this data is also cited in the function. If the user wishes to edit or add further parameter values to the model, it should be done via this function.  
 •	**fun_param_sample.R:** This function defines the statistical distributions for the probabilistic simulation and draws random values from these statistical distributions, based on the number of simulations which the user defined when setting up the model. If the user wishes to edit or add to the sampling from these statistical distributions, it should be done via this function.  
 •	**fun_multinorminv.R:** This very simple function is used to randomly draw coefficients based on Cholesky decomposition of covariance matrix and is only used for the sampling of parameters.  
 •	**fun_scenarios.R:** This function can be used to toggle certain modelling assumptions on or off, such as vial sharing or the ABR at which patients switch treatments.  
 
-* *Functions to run model:* * these functions contain the actual model, including the population, the treatment strategies, the resulting bleeds and mortality outcomes, the resources consumption, health utilities, costs, and discounting. They must be run in the particular order in which they are listed to work properly.  
+ *Functions to run model:*  these functions contain the actual model, including the population, the treatment strategies, the resulting bleeds and mortality outcomes, the resources consumption, health utilities, costs, and discounting. They must be run in the particular order in which they are listed to work properly.  
 •	**fun_gen_pop.R:** This function generates a heterogeneous population which is then subsequently treated with the different strategies in subsequent functions. For each random parameter, a value is drawn from the statistical distribution to determine the value for each individual. This population size is automatically set to the size determined by the user when setting up the model. If the user simply wishes for the patients in the simulation to have baseline rather than randomly drawn parameter values, they can set the mode of the function to “homogeneous”. In practice, this is only used in the “02A_cohort.R” script.  
 •	**Treatments:** Each of the treatment strategies has its own separate function, which determines the how and when treatments are administered as well as potentially switched. By having each treatment strategy in a separate function, it becomes easier to add or remove treatment strategies from the model at a later point in time. Based on the treatment strategy, the ABR is calculated in each cycle.  
 **fun_ETRANACOGENE_abr.R:** to use this function, one of the treatment strategies set during model setup must be named “ETRANACOGENE”. In the first cycle, success or failure of the treatment with ED is randomly drawn and assigned to each patient. For those patients where treatment fails, they immediately switch treatment to prophylaxis for the rest of the model. For those patients where treatment succeeds, the ABR is calculated in all future cycles. In the first cycle where the ABR exceeds the treatment switch ABR threshold is exceeded, they switch treatment to FIX prophylaxis. ABR is then recalculated in subsequent cycles based on a multiplicative relative bleed reduction ED and FIX prophylaxis.  
@@ -63,7 +69,7 @@ The functions are loaded into R in the 00_master_file.R script. Most of these fu
 •	**fun_costs.R:** This function multiplies the resource use with the price per unit for each resource to calculate the cost due to that resource in each cycle.  
 •	**fun_discounting.R:** This function multiplies undiscounted outcomes (life-years, QALYS, and costs) with the discount factor for that cycle to calculate the discounted outcome.  
 
-* *Functions to analyze results:* * 
+ *Functions to analyze results:*   
 •	**fun_results.R:** this function summarizes and saves the results of the model into a separate data frame. It also calculates incremental QALYs, costs, NMB, and ICER. It can be run in two modes: “simulation” and “patient”.  
   **Simulation:** This mode saves the results of each simulation, aggregated from all patients in that simulation. This is especially important for the probabilistic analysis due to memory constraints when simulating a large number of patients.  
   **Patient:** This mode saves the results of each patient, across all simulations. For this to work properly, the function must be run after each individual simulation.  
@@ -94,18 +100,17 @@ model <- fun_discounting(model = model)
 baseline_patient_results <- fun_results(model, mode = "patient")  
 baseline_model_results  <- fun_results(model, mode = "simulation")  
 
-
 ## Support
-If you have issues executing the code, or have other questions, please contact me at niklaus.meier@unibas.ch or 
+If you have issues executing the code, or have other questions, please contact me at niklaus.meier@unibas.ch or meier.niklaus@gmail.com
 
 ## Authors and acknowledgment
-
-Coder: Niklaus Meier, 
-Code Review: Katya Galactionova
-Further contributions to underlying theoretical work: Hendrik Fuchs, Cedric Hermans, Mark Pletscher, Matthias Schwenkglenks
+Main developer: Niklaus Meier   
+Code Review: Katya Galactionova   
+Further contributions to underlying theoretical work and publication: Hendrik Fuchs, Cedric Hermans, Mark Pletscher, Matthias Schwenkglenks   
 
 ## License
-For open source projects, say how it is licensed.
+GNU GENERAL PUBLIC LICENSE  
+Version 3, 29 June 2007  
 
 ## Project status
 This model is currently complete, but may receive updates and further functionalities in the future.
