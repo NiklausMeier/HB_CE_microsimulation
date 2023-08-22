@@ -1,0 +1,551 @@
+---
+title: "Analysis of HB CE model scenarios"
+author: "Niklaus Meier"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 8
+    highlight: null
+    reference_docx: word_template.docx
+    toc: no
+    toc_depth: 4
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Setup -->
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+#===============================================================================
+# Figure and table numbering
+#===============================================================================
+
+figure_nums <- captioner::captioner(prefix = "**Figure ")
+table_nums <- captioner::captioner(prefix = "**Table ")
+
+#===============================================================================
+# Formating of headers parsed in cat(sprintf())
+#===============================================================================
+
+header1 <- '# %s'
+header2 <- '## %s'
+header3 <- '### %s'
+header4 <- '#### %s'
+
+#===============================================================================
+# Function for making first letter upper case
+#===============================================================================
+
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
+#===============================================================================
+# Load data
+#===============================================================================
+
+load(file = paste0(directories$dir_dat_deriv, "/scenarios_inputs_results.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/scenarios_model.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/scenarios_patients.Rdata"))
+
+```
+
+
+
+```{r Comparison, echo=FALSE}
+
+color_brew <- colorRampPalette(brewer.pal(4, "Set1") )(4)
+
+#===============================================================================
+# ETRANACOGENE
+#===============================================================================
+
+#-------------------------------------------------------------------------------
+# Costs and QALYs
+#-------------------------------------------------------------------------------
+
+ggplot(scen_analysis$ETRANACOGENE_relative_bleed_reduction$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
+  geom_point()+
+  geom_text(aes(label=ETRANACOGENE_relative_bleed_reduction), nudge_x = 0.1, nudge_y = 0.1, check_overlap = TRUE, col = "red") + 
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  settings$ggplot_theme
+
+ggplot(scen_analysis$ETRANACOGENE_max_bleed_reduction_duration$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
+  geom_point()+
+  geom_text(aes(label=ETRANACOGENE_max_bleed_reduction_duration), nudge_x = 0.1, nudge_y = 0.1, check_overlap = TRUE, col = "red") + 
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  settings$ggplot_theme
+
+ggplot(scen_analysis$ETRANACOGENE_bleed_increase_per_year$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
+  geom_point()+
+  geom_text(aes(label=ETRANACOGENE_bleed_increase_per_year), nudge_x = 0.1, nudge_y = 0.1, check_overlap = TRUE, col = "red") + 
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  settings$ggplot_theme
+
+ggplot(scen_analysis$ETRANACOGENE_success_prob$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
+  geom_point()+
+  geom_text(aes(label=ETRANACOGENE_success_prob), nudge_x = 0.2, nudge_y = 0.1, check_overlap = TRUE, col = "red") + 
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  settings$ggplot_theme
+
+#-------------------------------------------------------------------------------
+# Comparisons with Prophylaxis
+#-------------------------------------------------------------------------------
+
+ggplot(scen_analysis$ETRANACOGENE_relative_bleed_reduction$model_results, aes(x = ETRANACOGENE_PROPHYLAXIS_inc_QALY , y = ETRANACOGENE_PROPHYLAXIS_inc_Costs/1000000)) +
+  geom_point()+
+  geom_text_repel(aes(label=ETRANACOGENE_relative_bleed_reduction, size = 12), nudge_x = 0.2, nudge_y = 0.1, col = color_brew[3]) + 
+  scale_y_continuous(limits=c(-8,0),breaks=seq(-8,0,1)) +
+  scale_x_continuous(limits=c(-7,7),breaks=seq(-7,7,1)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  settings$ggplot_theme +
+  theme(legend.position = "none")
+
+ggplot(scen_analysis$ETRANACOGENE_max_bleed_reduction_duration$model_results, aes(x = ETRANACOGENE_PROPHYLAXIS_inc_QALY , y = ETRANACOGENE_PROPHYLAXIS_inc_Costs/1000000)) +
+  geom_point()+
+  geom_text_repel(aes(label=ETRANACOGENE_max_bleed_reduction_duration, size = 12), nudge_x = 0.2, nudge_y = 0.1, col = color_brew[3]) + 
+  scale_y_continuous(limits=c(-8,0),breaks=seq(-8,0,1)) +
+  scale_x_continuous(limits=c(-3,3),breaks=seq(-3,3,0.5)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  settings$ggplot_theme +
+  theme(legend.position = "none")
+
+ggplot(scen_analysis$ETRANACOGENE_bleed_increase_per_year$model_results, aes(x = ETRANACOGENE_PROPHYLAXIS_inc_QALY , y = ETRANACOGENE_PROPHYLAXIS_inc_Costs/1000000)) +
+  geom_point()+
+  geom_text_repel(aes(label=ETRANACOGENE_bleed_increase_per_year, size = 12), nudge_x = 0.2, nudge_y = 0.1, col = color_brew[3]) + 
+  scale_y_continuous(limits=c(-8,0),breaks=seq(-8,0,1)) +
+  scale_x_continuous(limits=c(-3,3),breaks=seq(-3,3,0.5)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  settings$ggplot_theme +
+  theme(legend.position = "none")
+
+ggplot(scen_analysis$ETRANACOGENE_success_prob$model_results, aes(x = ETRANACOGENE_PROPHYLAXIS_inc_QALY , y = ETRANACOGENE_PROPHYLAXIS_inc_Costs/1000000)) +
+  geom_point()+
+  geom_text_repel(aes(label=ETRANACOGENE_success_prob, size = 12), nudge_x = 0.2, nudge_y = 0.1, col = color_brew[3]) + 
+  scale_y_continuous(limits=c(-8,0),breaks=seq(-8,0,1)) +
+  scale_x_continuous(limits=c(-3,3),breaks=seq(-3,3,0.5)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  settings$ggplot_theme +
+  theme(legend.position = "none")
+
+#===============================================================================
+# Prices
+#==============================================================================
+
+ggplot(scen_analysis$price_ETRANACOGENE$model_results, aes(y = ETRANACOGENE_PROPHYLAXIS_INMB/1000000 , x = scen_analysis$price_ETRANACOGENE$range/1000000)) +
+   geom_vline(xintercept = scen_analysis$base_case$model_results$price_ETRANACOGENE/1000000,
+             color = "grey", linetype="dashed") +
+  annotate("text", 
+           x= scen_analysis$base_case$model_results$price_ETRANACOGENE/1000000 + 0.05, 
+           y= -2.3, 
+           label= "Base case price", 
+           angle= 90, size = 5, color = "grey") +
+  geom_point()+
+  geom_line()+
+  geom_text(aes(label=format(price_ETRANACOGENE/1000000, big.mark = ",", scientific = FALSE), size = 12), nudge_x = 0.1, nudge_y = 0.85, check_overlap = TRUE, col = color_brew[2]) + 
+  scale_y_continuous(limits=c(-4,4),breaks=seq(-4,4,1)) +
+  scale_x_continuous(limits=c(0,3.5),breaks=seq(0,3.5,0.5)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Incremental NMB [Mio. EUR]") + xlab("Price etranacogene dezaparvovec [Mio. EUR]") +
+  settings$ggplot_theme +
+  theme(legend.position = "none")
+
+# price of coagulation factor
+ggplot(scen_analysis$price_coagulation_factor_IU$model_results, aes(y = ETRANACOGENE_PROPHYLAXIS_INMB/1000000 , x = scen_analysis$price_coagulation_factor_IU$range)) +
+  geom_vline(xintercept = scen_analysis$base_case$model_results$price_coagulation_factor_IU,
+             color = "grey", linetype="dashed") +
+  annotate("text", 
+           x= scen_analysis$base_case$model_results$price_coagulation_factor_IU + 0.05, 
+           y= -2.3, 
+           label= "Base case price", 
+           angle= 90, size = 5, color = "grey") +
+  geom_point()+
+  geom_line()+
+  geom_text(aes(label=format(price_coagulation_factor_IU, big.mark = ",", scientific = FALSE), size = 12), nudge_x = -0.2, nudge_y = 0, check_overlap = TRUE, col = color_brew[2]) + 
+  scale_y_continuous(limits=c(-4,4),breaks=seq(-4,4,1)) +
+  scale_x_continuous(limits=c(-0.5,3),breaks=seq(-0.5,3,0.5)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Incremental NMB [Mio. EUR]") + xlab("Price per IU of coagulation factor [EUR]") +
+  settings$ggplot_theme +
+  theme(legend.position = "none")
+
+# Scenario 7 days bleed disutility
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario INMB")
+
+scenario_table_bleed_disutility <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_bleed_disutility[,"Treatment"] <- c("ETRANACOGENE",  "Prophylaxis")
+
+scenario_table_bleed_disutility[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_bleed_disutility[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_bleed_disutility[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_bleed_disutility[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_bleed_disutility[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_bleed_disutility[1,"Scenario QALYs"]                   <- scen_analysis[["scen_bleed_disutility"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_bleed_disutility[2,"Scenario QALYs"]                   <- scen_analysis[["scen_bleed_disutility"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_bleed_disutility[1,"Scenario total costs"]             <- scen_analysis[["scen_bleed_disutility"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_bleed_disutility[2,"Scenario total costs"]             <- scen_analysis[["scen_bleed_disutility"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_bleed_disutility[2,"Scenario INMB"]                    <- scen_analysis[["scen_bleed_disutility"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_bleed_disutility, "Comparison 1 day vs 7 day bleed disutility", style = 'rmarkdown')
+
+# Scenario higher price per hospitalization
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline costs hosp per bleed", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario costs hosp per bleed", "Scenario INMB")
+
+scenario_table_high_price_hosp <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_high_price_hosp[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis")
+
+scenario_table_high_price_hosp[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_high_price_hosp[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_high_price_hosp[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_high_price_hosp[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_high_price_hosp[1,"Baseline costs hosp per bleed"]    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_cost_hospitalization_disc"]][1]
+scenario_table_high_price_hosp[2,"Baseline costs hosp per bleed"]    <- scen_analysis[["base_case"]][["model_results"]][["PROPHYLAXIS_cost_hospitalization_disc"]][1]
+
+scenario_table_high_price_hosp[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_high_price_hosp[1,"Scenario QALYs"]                   <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1]
+scenario_table_high_price_hosp[2,"Scenario QALYs"]                   <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1]
+
+scenario_table_high_price_hosp[1,"Scenario total costs"]             <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]]["ETRANACOGENE_cost_disc"][1]
+scenario_table_high_price_hosp[2,"Scenario total costs"]             <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1]
+
+scenario_table_high_price_hosp[1,"Scenario costs hosp per bleed"]    <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]][["ETRANACOGENE_cost_hospitalization_disc"]][1]
+scenario_table_high_price_hosp[2,"Scenario costs hosp per bleed"]    <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]][["PROPHYLAXIS_cost_hospitalization_disc"]][1]
+
+scenario_table_high_price_hosp[2,"Scenario INMB"]                    <- scen_analysis[["price_hosp_ICU_days"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_high_price_hosp, "Comparison base case vs 5x costs per day ICU", style = 'rmarkdown')
+
+# Scenario no treatment switching Etranacogene Dezaparvovec
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline costs FIX prophylaxis", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario costs FIX prophylaxis", "Scenario INMB")
+
+
+scenario_table_ETRANACOGENE_no_switch <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_ETRANACOGENE_no_switch[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis")
+
+
+scenario_table_ETRANACOGENE_no_switch[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_ETRANACOGENE_no_switch[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_ETRANACOGENE_no_switch[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_ETRANACOGENE_no_switch[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_ETRANACOGENE_no_switch[1,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_ETRANACOGENE_no_switch[2,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_ETRANACOGENE_no_switch[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_ETRANACOGENE_no_switch[1,"Scenario QALYs"]                   <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_ETRANACOGENE_no_switch[2,"Scenario QALYs"]                   <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_ETRANACOGENE_no_switch[1,"Scenario total costs"]             <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_ETRANACOGENE_no_switch[2,"Scenario total costs"]             <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_ETRANACOGENE_no_switch[1,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_ETRANACOGENE_no_switch[2,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_ETRANACOGENE_no_switch[2,"Scenario INMB"]                    <- scen_analysis[["scen_ETRANACOGENE_no_switch"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_ETRANACOGENE_no_switch, "Comparison base case no treatment switching for Etranacogene Dezaparvovec", style = 'rmarkdown')
+
+# Scenario no vial sharing
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline costs FIX prophylaxis", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario costs FIX prophylaxis", "Scenario INMB")
+
+
+scenario_table_no_vial_sharing <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_no_vial_sharing[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis")
+
+
+scenario_table_no_vial_sharing[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_no_vial_sharing[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_no_vial_sharing[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_no_vial_sharing[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_no_vial_sharing[1,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_no_vial_sharing[2,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_no_vial_sharing[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_no_vial_sharing[1,"Scenario QALYs"]                   <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_no_vial_sharing[2,"Scenario QALYs"]                   <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_no_vial_sharing[1,"Scenario total costs"]             <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_no_vial_sharing[2,"Scenario total costs"]             <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_no_vial_sharing[1,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_no_vial_sharing[2,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_no_vial_sharing[2,"Scenario INMB"]                    <- scen_analysis[["scen_no_vial_sharing"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_no_vial_sharing, "Comparison base case no vial sharing", style = 'rmarkdown')
+
+# Scenario age 18
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario INMB")
+
+
+scenario_table_age_18 <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_age_18[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis")
+
+
+scenario_table_age_18[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_age_18[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_age_18[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_age_18[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_age_18[1,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_age_18[2,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_age_18[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_age_18[1,"Scenario QALYs"]                   <- scen_analysis[["age_18"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_age_18[2,"Scenario QALYs"]                   <- scen_analysis[["age_18"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_age_18[1,"Scenario total costs"]             <- scen_analysis[["age_18"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_age_18[2,"Scenario total costs"]             <- scen_analysis[["age_18"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_age_18[1,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["age_18"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_age_18[2,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["age_18"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_age_18[2,"Scenario INMB"]                    <- scen_analysis[["age_18"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_age_18, "Comparison base case no vial sharing", style = 'rmarkdown')
+
+# Scenario age 60
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario INMB")
+
+scenario_table_age_60 <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_age_60[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis")
+
+
+scenario_table_age_60[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_age_60[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_age_60[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_age_60[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_age_60[1,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_age_60[2,"Baseline costs FIX prophylaxis"]   <- scen_analysis[["base_case"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_age_60[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_age_60[1,"Scenario QALYs"]                   <- scen_analysis[["age_60"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_age_60[2,"Scenario QALYs"]                   <- scen_analysis[["age_60"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_age_60[1,"Scenario total costs"]             <- scen_analysis[["age_60"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_age_60[2,"Scenario total costs"]             <- scen_analysis[["age_60"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_age_60[1,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["age_60"]][["model_results"]][["ETRANACOGENE_cost_PROPHYLAXIS_disc"]][1]
+scenario_table_age_60[2,"Scenario costs FIX prophylaxis"]   <- scen_analysis[["age_60"]][["model_results"]][["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]][1]
+
+scenario_table_age_60[2,"Scenario INMB"]                    <- scen_analysis[["age_60"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_age_60, "Comparison base case no vial sharing", style = 'rmarkdown')
+
+# Scenario German utilities from Grochtendreis et al. (2019)
+
+columns <- c("Treatment",
+             "Baseline QALYs", "Baseline total costs", "Baseline INMB",
+             "Scenario QALYs", "Scenario total costs", "Scenario INMB")
+
+scenario_table_util_german <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 2,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_util_german[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis")
+
+
+scenario_table_util_german[1,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_util_german[2,"Baseline QALYs"]                   <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_util_german[1,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_util_german[2,"Baseline total costs"]             <- scen_analysis[["base_case"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_util_german[2,"Baseline INMB"]                    <- scen_analysis[["base_case"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+scenario_table_util_german[1,"Scenario QALYs"]                   <- scen_analysis[["scen_util_german"]][["model_results"]]["ETRANACOGENE_QALYs_disc"][1,]
+scenario_table_util_german[2,"Scenario QALYs"]                   <- scen_analysis[["scen_util_german"]][["model_results"]]["PROPHYLAXIS_QALYs_disc"][1,]
+
+scenario_table_util_german[1,"Scenario total costs"]             <- scen_analysis[["scen_util_german"]][["model_results"]]["ETRANACOGENE_cost_disc"][1,]
+scenario_table_util_german[2,"Scenario total costs"]             <- scen_analysis[["scen_util_german"]][["model_results"]]["PROPHYLAXIS_cost_disc"][1,]
+
+scenario_table_util_german[2,"Scenario INMB"]                    <- scen_analysis[["scen_util_german"]][["model_results"]][["ETRANACOGENE_PROPHYLAXIS_INMB"]][1]
+
+pandoc.table(scenario_table_util_german, "Comparison base case vs. German utilities", style = 'rmarkdown')
+
+# Comparison Table
+
+columns <- c("Scenario",
+             "Incremental QALYs", "Incremental Costs [EUR]", "INMB [EUR]")
+
+scenario_table_comparison <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 9,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_comparison[,"Scenario"] <- c("Base case", 
+                                            "Scenario 1: 7 day bleed disutility",
+                                            "Scenario 2: 5x costs per day in ICU",
+                                            "Scenario 3: No treatment switching",
+                                            "Scenario 4: No vial sharing",
+                                            "Scenario 5: Cost-minimization",
+                                            "Scenario 6: Age 18",
+                                            "Scenario 7: Age 60",
+                                            "Scenario 8: German utilities")
+
+scenario_table_comparison[1,"Incremental QALYs"] <- scenario_table_bleed_disutility[1,"Baseline QALYs"] - scenario_table_bleed_disutility[2,"Baseline QALYs"]
+
+scenario_table_comparison[2,"Incremental QALYs"] <- scenario_table_bleed_disutility[1,"Scenario QALYs"] - scenario_table_bleed_disutility[2,"Scenario QALYs"]
+
+scenario_table_comparison[3,"Incremental QALYs"] <- scenario_table_high_price_hosp[1,"Scenario QALYs"] - scenario_table_high_price_hosp[2,"Scenario QALYs"]
+
+scenario_table_comparison[4,"Incremental QALYs"] <- scenario_table_ETRANACOGENE_no_switch[1,"Scenario QALYs"] - scenario_table_ETRANACOGENE_no_switch[2,"Scenario QALYs"]
+
+scenario_table_comparison[5,"Incremental QALYs"] <- scenario_table_no_vial_sharing[1,"Scenario QALYs"] - scenario_table_no_vial_sharing[2,"Scenario QALYs"]
+
+# For the cost-minimization scenario we simply use baseline values
+scenario_table_comparison[6,"Incremental QALYs"] <- scenario_table_bleed_disutility[1,"Baseline QALYs"] - scenario_table_bleed_disutility[2,"Baseline QALYs"]
+
+scenario_table_comparison[7,"Incremental QALYs"] <- scenario_table_age_18[1,"Scenario QALYs"] - scenario_table_age_18[2,"Scenario QALYs"]
+
+scenario_table_comparison[8,"Incremental QALYs"] <- scenario_table_age_60[1,"Scenario QALYs"] - scenario_table_age_60[2,"Scenario QALYs"]
+
+scenario_table_comparison[9,"Incremental QALYs"] <- scenario_table_util_german[1,"Scenario QALYs"] - scenario_table_util_german[2,"Scenario QALYs"]
+
+### 
+
+scenario_table_comparison[1,"Incremental Costs [EUR]"] <- scenario_table_bleed_disutility[1,"Baseline total costs"] - scenario_table_bleed_disutility[2,"Baseline total costs"]
+
+scenario_table_comparison[2,"Incremental Costs [EUR]"] <- scenario_table_bleed_disutility[1,"Scenario total costs"] - scenario_table_bleed_disutility[2,"Scenario total costs"]
+
+scenario_table_comparison[3,"Incremental Costs [EUR]"] <- scenario_table_high_price_hosp[1,"Scenario total costs"] - scenario_table_high_price_hosp[2,"Scenario total costs"]
+
+scenario_table_comparison[4,"Incremental Costs [EUR]"] <- scenario_table_ETRANACOGENE_no_switch[1,"Scenario total costs"] - scenario_table_ETRANACOGENE_no_switch[2,"Scenario total costs"]
+  
+scenario_table_comparison[5,"Incremental Costs [EUR]"] <- scenario_table_no_vial_sharing[1,"Scenario total costs"] - scenario_table_no_vial_sharing[2,"Scenario total costs"]
+
+# For the cost-minimization scenario we simply use baseline values
+scenario_table_comparison[6,"Incremental Costs [EUR]"] <- scenario_table_bleed_disutility[1,"Baseline total costs"] - scenario_table_bleed_disutility[2,"Baseline total costs"]
+  
+scenario_table_comparison[7,"Incremental Costs [EUR]"] <- scenario_table_age_18[1,"Scenario total costs"] - scenario_table_age_18[2,"Scenario total costs"]
+  
+scenario_table_comparison[8,"Incremental Costs [EUR]"] <- scenario_table_age_60[1,"Scenario total costs"] - scenario_table_age_60[2,"Scenario total costs"]
+
+scenario_table_comparison[9,"Incremental Costs [EUR]"] <- scenario_table_util_german[1,"Scenario total costs"] - scenario_table_util_german[2,"Scenario total costs"]
+
+###
+
+scenario_table_comparison[1,"INMB [EUR]"] <- scenario_table_bleed_disutility[2,"Baseline INMB"]
+scenario_table_comparison[2,"INMB [EUR]"] <- scenario_table_bleed_disutility[2,"Scenario INMB"]
+scenario_table_comparison[3,"INMB [EUR]"] <- scenario_table_high_price_hosp[2,"Scenario INMB"]
+scenario_table_comparison[4,"INMB [EUR]"] <- scenario_table_ETRANACOGENE_no_switch[2,"Scenario INMB"]
+scenario_table_comparison[5,"INMB [EUR]"] <- scenario_table_no_vial_sharing[2,"Scenario INMB"]
+# For the cost-minimization scenario, negative incremental costs are equal to INMB
+scenario_table_comparison[6,"INMB [EUR]"] <- -scenario_table_comparison[6,"Incremental Costs [EUR]"]
+scenario_table_comparison[7,"INMB [EUR]"] <- scenario_table_age_18[2,"Scenario INMB"]
+scenario_table_comparison[8,"INMB [EUR]"] <- scenario_table_age_60[2,"Scenario INMB"]
+scenario_table_comparison[9,"INMB [EUR]"] <- scenario_table_util_german[2,"Scenario INMB"]
+
+pandoc.table(scenario_table_comparison, "Comparison base case no vial sharing", style = 'rmarkdown')
+
+
+```
+
+
+# System information
+
+```{r sysinfo, echo = TRUE, results = 'asis'}
+
+Sys.info()
+
+sessionInfo(package = NULL)
+
+```
+
+```{r remove, include = FALSE}
+
+rm(patient_results_combined, model_results_combined,
+   scen_analysis)
+
+gc()
+
+```

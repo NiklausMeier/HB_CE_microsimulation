@@ -1,0 +1,470 @@
+---
+title: "Analysis of HB CE deterministic model"
+author: "Niklaus Meier"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 8
+    highlight: null
+    reference_docx: word_template.docx
+    toc: no
+    toc_depth: 4
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Setup -->
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+#===============================================================================
+# Figure and table numbering
+#===============================================================================
+
+figure_nums <- captioner::captioner(prefix = "**Figure ")
+table_nums <- captioner::captioner(prefix = "**Table ")
+
+#===============================================================================
+# Formating of headers parsed in cat(sprintf())
+#===============================================================================
+
+header1 <- '# %s'
+header2 <- '## %s'
+header3 <- '### %s'
+header4 <- '#### %s'
+
+#===============================================================================
+# Load data
+#===============================================================================
+
+load(file = paste0(directories$dir_dat_deriv, "/deterministic_patient_results.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/deterministic_model_results.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/deterministic_diagnostics.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/deterministic_outcomes_over_time.Rdata"))
+
+```
+
+```{r Diagnostics 1, include = FALSE}
+
+patient_diag$plots <- fun_diagnostics_plots(patient_results)
+
+```
+
+\newpage
+
+```{r Diagnostics 2, echo=FALSE}
+
+print("These plots show the convergence of various outcomes as more patients are added to generate the running mean.")
+
+for (i in 1:10) {
+  print(ggarrange(plotlist = patient_diag$plots[(1+(i-1)*4):(4+(i-1)*4)],
+                labels = colnames(patient_diag$convergence)[(1+(i-1)*4):(4+(i-1)*4)],
+                ncol = 2, nrow = 2,
+                font.label = list(size = 10, color = "dark red", face = "bold")))
+}
+
+convergence_table <- data.frame(matrix(nrow = nrow(patient_diag[["convergence"]]), ncol = 3))
+colnames(convergence_table) <- c("ETRA vs. PROPH inc. QALYs", "ETRA vs. PROPH inc. Costs", "ETRA vs. PROPH inc. NMB")
+
+convergence_table[,"ETRA vs. PROPH inc. QALYs"] <- patient_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_inc_QALY"]
+convergence_table[,"ETRA vs. PROPH inc. Costs"] <- patient_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_inc_Costs"]
+convergence_table[,"ETRA vs. PROPH inc. NMB"]   <- patient_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_INMB"]
+
+pandoc.table(convergence_table, "Diagnostics of convergence of running incremental outcomes over all patients in simulation.", style = 'rmarkdown')
+print("We used intervals of 1000 patients, and checked whether the running mean of the incremental outcomes change by more than 1%.")
+print("A 0 means that we have reached a stable value, i.e. we have achieved convergence and have a sufficient sample size, using this interval and this percentage change as a measure of sufficient stability.")
+
+```
+
+\newpage
+
+```{r Summary Tables, echo=FALSE}
+
+summary_outcomes <- c("Treatment","LYs", "QALYs", "Costs", "NMB", "ICER")
+
+## Comparison between undiscounted outcomes of ETRANACOGENE and Prophylaxis
+
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 3,
+                                                       ncol = length(summary_outcomes))), 
+                                                            summary_outcomes)
+
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis", "Increment")
+
+
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"LYs"]      <- model_results["ETRANACOGENE_LYs_undisc"]
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"LYs"]      <- model_results["PROPHYLAXIS_LYs_undisc"]
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[3,"LYs"]      <- summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"LYs"] -                                                                                           summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"LYs"]
+
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"QALYs"]    <- model_results["ETRANACOGENE_QALYs_undisc"]
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"QALYs"]    <- model_results["PROPHYLAXIS_QALYs_undisc"]
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[3,"QALYs"]    <- summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"QALYs"] -                                                                                         summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"QALYs"]
+
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"Costs"]    <- model_results["ETRANACOGENE_cost_undisc"]
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"Costs"]    <- model_results["PROPHYLAXIS_cost_undisc"]
+summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[3,"Costs"]    <- summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"Costs"] -                                                                                         summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"Costs"]
+
+pandoc.table(summary_table_undisc_ETRANACOGENE_PROPHYLAXIS, "Comparison undiscounted outcomes between ETRANACOGENE and Prophylaxis", style = 'rmarkdown')
+
+## Comparison between discounted outcomes of ETRANACOGENE and Prophylaxis
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 3,
+                                                       ncol = length(summary_outcomes))), 
+                                                            summary_outcomes)
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[,"Treatment"] <- c("ETRANACOGENE", "Prophylaxis", "Increment")
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"LYs"]      <- model_results["ETRANACOGENE_LYs_disc"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"LYs"]      <- model_results["PROPHYLAXIS_LYs_disc"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"LYs"]      <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"LYs"] -                                                                                           summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"LYs"]
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"QALYs"]    <- model_results["ETRANACOGENE_QALYs_disc"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"QALYs"]    <- model_results["PROPHYLAXIS_QALYs_disc"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"QALYs"]    <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"QALYs"] -                                                                                         summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"QALYs"]
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"Costs"]    <- model_results["ETRANACOGENE_cost_disc"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"Costs"]    <- model_results["PROPHYLAXIS_cost_disc"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"Costs"]    <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"Costs"] -                                                                                         summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"Costs"]
+
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"NMB"]      <- model_results["ETRANACOGENE_NMB"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"NMB"]      <- model_results["PROPHYLAXIS_NMB"]
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"NMB"]      <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[1,"NMB"] -                                                                                            summary_table_disc_ETRANACOGENE_PROPHYLAXIS[2,"NMB"]
+
+summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"ICER"]     <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"Costs"] /                                                                                          summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"QALYs"]
+
+pandoc.table(summary_table_disc_ETRANACOGENE_PROPHYLAXIS, "Comparison discounted outcomes between ETRANACOGENE and Prophylaxis", style = 'rmarkdown')
+
+
+```
+
+\newpage
+
+```{r Cost breakdown, echo=FALSE}
+
+summary_costs <- c("Treatment","ETRANACOGENE", "FIX Prophylaxis", "FIX for treatment of bleeds", "Hospitalization", "Surgery", "Total")
+
+## Comparison between undiscounted costs of ETRANACOGENE and FIX Prophylaxis
+
+summary_table_costs <- setNames(data.frame(matrix(data = 0,
+                                                  nrow = 2,
+                                                  ncol = length(summary_costs))), 
+                                                         summary_costs)
+
+summary_table_costs[,"Treatment"] <- c("ETRANACOGENE", "FIX Prophylaxis")
+
+summary_table_costs[1,"ETRANACOGENE"]                   <- model_results["ETRANACOGENE_cost_ETRANACOGENE_undisc"]
+summary_table_costs[2,"ETRANACOGENE"]                   <- model_results["PROPHYLAXIS_cost_ETRANACOGENE_undisc"]
+
+summary_table_costs[1,"FIX Prophylaxis"]             <- model_results["ETRANACOGENE_cost_PROPHYLAXIS_undisc"]
+summary_table_costs[2,"FIX Prophylaxis"]             <- model_results["PROPHYLAXIS_cost_PROPHYLAXIS_undisc"]
+  
+summary_table_costs[1,"FIX for treatment of bleeds"] <- model_results["ETRANACOGENE_cost_factor_treat_bleed_undisc"]
+summary_table_costs[2,"FIX for treatment of bleeds"] <- model_results["PROPHYLAXIS_cost_factor_treat_bleed_undisc"]
+  
+summary_table_costs[1,"Hospitalization"]             <- model_results["ETRANACOGENE_cost_hospitalization_undisc"]
+summary_table_costs[2,"Hospitalization"]             <- model_results["PROPHYLAXIS_cost_hospitalization_undisc"]
+  
+summary_table_costs[1,"Surgery"]                     <- model_results["ETRANACOGENE_cost_surgery_undisc"]
+summary_table_costs[2,"Surgery"]                     <- model_results["PROPHYLAXIS_cost_surgery_undisc"]
+  
+summary_table_costs[1,"Total"]                       <- sum(summary_table_costs[1, 2:ncol(summary_table_costs)])
+summary_table_costs[2,"Total"]                       <- sum(summary_table_costs[2, 2:ncol(summary_table_costs)])
+
+pandoc.table(summary_table_costs, "Undiscounted costs broken down by category", style = 'rmarkdown')
+
+## Comparison between discounted outcomes of ETRANACOGENE and FIX Prophylaxis
+
+summary_table_costs <- setNames(data.frame(matrix(data = 0,
+                                                  nrow = 2,
+                                                  ncol = length(summary_costs))), 
+                                                         summary_costs)
+
+summary_table_costs[,"Treatment"] <- c("ETRANACOGENE", "FIX Prophylaxis")
+
+summary_table_costs[1,"ETRANACOGENE"]                   <- model_results["ETRANACOGENE_cost_ETRANACOGENE_disc"]
+summary_table_costs[2,"ETRANACOGENE"]                   <- model_results["PROPHYLAXIS_cost_ETRANACOGENE_disc"]
+
+summary_table_costs[1,"FIX Prophylaxis"]             <- model_results["ETRANACOGENE_cost_PROPHYLAXIS_disc"]
+summary_table_costs[2,"FIX Prophylaxis"]             <- model_results["PROPHYLAXIS_cost_PROPHYLAXIS_disc"]
+  
+summary_table_costs[1,"FIX for treatment of bleeds"] <- model_results["ETRANACOGENE_cost_factor_treat_bleed_disc"]
+summary_table_costs[2,"FIX for treatment of bleeds"] <- model_results["PROPHYLAXIS_cost_factor_treat_bleed_disc"]
+  
+summary_table_costs[1,"Hospitalization"]             <- model_results["ETRANACOGENE_cost_hospitalization_disc"]
+summary_table_costs[2,"Hospitalization"]             <- model_results["PROPHYLAXIS_cost_hospitalization_disc"]
+  
+summary_table_costs[1,"Surgery"]                     <- model_results["ETRANACOGENE_cost_surgery_disc"]
+summary_table_costs[2,"Surgery"]                     <- model_results["PROPHYLAXIS_cost_surgery_disc"]
+  
+summary_table_costs[1,"Total"]                       <- sum(summary_table_costs[1, 2:ncol(summary_table_costs)])
+summary_table_costs[2,"Total"]                       <- sum(summary_table_costs[2, 2:ncol(summary_table_costs)])
+
+pandoc.table(summary_table_costs, "Discounted costs broken down by category", style = 'rmarkdown')
+
+
+
+```
+
+\newpage
+
+```{r Scatter Plot Patients, echo=FALSE}
+
+color_brew <- colorRampPalette(brewer.pal(4, "Set1") )(4)
+
+ETRA <- "Etranacogene dezaparvovec"
+PROPH <- "FIX prophylaxis"
+
+ggplot(data = patient_results) +
+  geom_point(aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000, color = ETRA, shape = ETRA)) +
+  geom_point(aes(x = PROPHYLAXIS_QALYs_disc , y = PROPHYLAXIS_cost_disc/1000000, color = PROPH, shape = PROPH)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Discounted Costs [Mio. EUR]") + xlab("Discounted QALYs") +
+  settings$ggplot_theme +
+  scale_color_manual(values = c("Etranacogene dezaparvovec"=color_brew[1],"FIX prophylaxis"=color_brew[2])) +
+  scale_shape_manual(values = c("Etranacogene dezaparvovec"=15,"FIX prophylaxis"=16)) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(0.3,0.9),
+        legend.text = element_text(size = 16))
+
+```
+
+\newpage
+
+```{r Comparisons, echo=FALSE}
+
+ggplot() +
+  geom_point(data = patient_results, aes(x = ETRANACOGENE_PROPHYLAXIS_inc_QALY , y = ETRANACOGENE_PROPHYLAXIS_inc_Costs/1000000, color = PROPH), size = 0.8) +
+  geom_point(data = patient_results, aes(x = mean(ETRANACOGENE_PROPHYLAXIS_inc_QALY) , y = mean(ETRANACOGENE_PROPHYLAXIS_inc_Costs/1000000)), size = 3, shape = 18) +
+  scale_y_continuous(limits=c(-10,10),breaks=seq(-10,10,1)) +
+  scale_x_continuous(limits=c(-4,4),breaks=seq(-4,4,1)) +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  settings$ggplot_theme +
+  scale_color_manual(values = c("Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position= "none")
+
+
+```
+
+\newpage
+
+```{r Outcomes per cycle, echo=FALSE}
+
+# Life years, undiscounted and discounted
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_LYs_cycle_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_LYs_cycle_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted Life Years per cycle") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1], "Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_LYs_cycle_disc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_LYs_cycle_disc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Discounted Life Years per cycle") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1], "Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+# QALYs, undiscounted and discounted
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_QALYs_cycle_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_QALYs_cycle_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted QALYs per Cycle") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_QALYs_cycle_disc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_QALYs_cycle_disc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Discounted QALYs per Cycle") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+# Costs, undiscounted and discounted
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_cost_cycle_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_cost_cycle_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted costs per cycle") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2],"Background Mortality"=color_brew[4])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .70),
+        legend.text = element_text(size = 16))
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_cost_cycle_disc, color = "Etranacogene dezaparvovec"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_cost_cycle_disc, color = "FIX Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Discounted costs per cycle") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2],"Background Mortality"=color_brew[4])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .70),
+        legend.text = element_text(size = 16))
+
+```
+
+```{r Outcomes as a cumulative sum, echo=FALSE}
+
+# Life years, undiscounted and discounted
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_LYs_sum_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_LYs_sum_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted cumulative life years over time") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1], "Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_LYs_sum_disc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_LYs_sum_disc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Discounted cumulative life years over time") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1], "Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+# QALYs, undiscounted and discounted
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_QALYs_sum_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_QALYs_sum_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted cumulative QALYs over time") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_QALYs_sum_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_QALYs_sum_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted cumulative QALYs over time") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .20),
+        legend.text = element_text(size = 16))
+
+# Costs, undiscounted and discounted
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_cost_sum_undisc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_cost_sum_undisc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Undiscounted cumulative costs over time") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2],"Background Mortality"=color_brew[4])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .50),
+        legend.text = element_text(size = 16))
+
+ggplot() +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_cost_sum_disc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_cost_sum_disc, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Years") +
+  ylab("Discounted cumulative costs over time") + 
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2],"Background Mortality"=color_brew[4])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .50),
+        legend.text = element_text(size = 16))
+
+
+```
+
+# System information
+
+```{r sysinfo, echo = TRUE, results = 'asis'}
+
+Sys.info()
+
+sessionInfo(package = NULL)
+
+```
+
+```{r remove, include = FALSE}
+
+rm(model, patient_results, model_results,
+   color_brew, ENDO, VIRAL, PROPH,
+   summary_outcomes,
+   summary_table_undisc_ETRANACOGENE_VIR_GENE_THERAPY,
+   summary_table_undisc_ETRANACOGENE_PROPHYLAXIS,
+   summary_table_disc_ETRANACOGENE_VIR_GENE_THERAPY,
+   summary_table_disc_ETRANACOGENE_PROPHYLAXIS,
+   summary_table_costs,
+   patient_diag, convergence, convergence_table,
+   outcomes_over_time_array)
+
+gc()
+
+```

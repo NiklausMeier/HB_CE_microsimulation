@@ -1,0 +1,221 @@
+---
+title: "Analysis of HB CE univariate sensitivity analysis"
+author: "Niklaus Meier"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 8
+    highlight: null
+    reference_docx: word_template.docx
+    toc: no
+    toc_depth: 4
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Setup -->
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+#===============================================================================
+# Figure and table numbering
+#===============================================================================
+
+figure_nums <- captioner::captioner(prefix = "**Figure ")
+table_nums <- captioner::captioner(prefix = "**Table ")
+
+#===============================================================================
+# Formating of headers parsed in cat(sprintf())
+#===============================================================================
+
+header1 <- '# %s'
+header2 <- '## %s'
+header3 <- '### %s'
+header4 <- '#### %s'
+
+#===============================================================================
+# Function for making first letter upper case
+#===============================================================================
+
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
+#===============================================================================
+# Load data
+#===============================================================================
+
+load(file = paste0(directories$dir_dat_deriv, "/sens_analysis_inputs_results.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/sens_analysis_baseline.Rdata"))
+
+
+```
+
+```{r Tornado diagramm, echo=FALSE}
+
+# Set colors and add more colors to this palette
+color_brew <- colorRampPalette(brewer.pal(4, "Set1") )(4)
+
+# rename parameters of sensitivity analysis for graph
+
+names(sens_analysis) <- c("Hospitalization probability","Hospitalization LOS", "Utility baseline",
+                          "Utility male", "Disutility age", "Disutility age-squared", "Disutility PS 12 - 21",
+                          "Disutility PS 22+", "Disutility joint bleed", "Disutility other bleed", "Disutility infusion",
+                          "Disutility surgery", "Share joint bleeds", "Bleed mortality ratio", "Link Joint Bleed/PS",
+                          "ETRANACOGENE: Relative bleed reduction", "ETRANACOGENE: Maximum bleed reduction period",
+                          "ETRANACOGENE: Bleed rate increase per year", "ETRANACOGENE: Success probability",
+                          "PROPHYLAXIS: Relative bleed reduction")
+
+# Comparison incremental QALYs ETRANACOGENE vs Prophylaxis
+
+tornado_data <- fun_tornado(sens_list = sens_analysis, 
+                            outcome = "ETRANACOGENE_PROPHYLAXIS_inc_QALY", 
+                            baseline = baseline_model_results[,outcome])
+order_parameters <- tornado_data$parameter[order(tornado_data$type, tornado_data$difference, tornado_data$parameter)]
+for (i in 1:length(sens_analysis)) {
+    order_parameters <- order_parameters[-2]
+}
+min <- min(tornado_data$outcome_value)
+max <- max(tornado_data$outcome_value)
+
+ggplot() + 
+geom_rect(data = tornado_data, 
+          aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=xmin, fill = type)) +
+geom_text(data = tornado_data[tornado_data$rank == "low",],
+          aes(x = xmax, y = outcome_value, 
+              label = sprintf(tornado_data[tornado_data$rank == "low",][["parameter_value"]], fmt = '%#.3f')),
+          size = 3, vjust = +1.3, hjust = +1.5) +
+geom_text(data = tornado_data[tornado_data$rank == "high",],
+         aes(x = xmax, y = outcome_value, 
+             label = sprintf(tornado_data[tornado_data$rank == "high",][["parameter_value"]], fmt = '%#.3f')),
+         size = 3, vjust = +1.3, hjust = -0.5) +
+geom_hline(yintercept = baseline_model_results[,"ETRANACOGENE_PROPHYLAXIS_inc_QALY"]) +
+scale_x_continuous(breaks = c(1:length(order_parameters)), 
+                 labels = order_parameters) +
+scale_y_continuous(limits=c(min-0.19,max+0.13)) +
+settings$ggplot_theme +
+theme(axis.title.y=element_blank(),
+      axis.text = element_text(size = 10),
+      legend.position = 'bottom',
+      legend.direction = "horizontal",
+      panel.grid.major.y = element_blank()) +
+ylab("Incremental QALYs") + 
+scale_fill_manual(values = color_brew, labels=c("Lower Bound", "Upper Bound")) +
+coord_flip() 
+
+# Comparison incremental costs ETRANACOGENE vs Prophylaxis
+
+tornado_data <-fun_tornado(sens_list = sens_analysis, 
+                           outcome = "ETRANACOGENE_PROPHYLAXIS_inc_Costs", 
+                           baseline = baseline_model_results[,outcome])
+
+
+
+order_parameters <- tornado_data$parameter[order(tornado_data$type, tornado_data$difference, tornado_data$parameter)]
+for (i in 1:length(sens_analysis)) {
+    order_parameters <- order_parameters[-2]
+}
+
+tornado_data[,"outcome_value"] <- tornado_data[,"outcome_value"]/1000000
+tornado_data[,"difference"]    <- tornado_data[,"difference"]/1000000
+tornado_data[,"ymin"]          <- tornado_data[,"ymin"]/1000000
+tornado_data[,"ymax"]          <- tornado_data[,"ymax"]/1000000
+tornado_data[,"label_pos"]      <- tornado_data[,"label_pos"]/1000000
+
+
+min <- min(tornado_data$outcome_value)
+max <- max(tornado_data$outcome_value)
+
+
+ggplot() + 
+geom_rect(data = tornado_data, 
+          aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=xmin, fill = type)) +
+geom_text(data = tornado_data[tornado_data$rank == "low",],
+          aes(x = xmax, y = outcome_value, 
+              label = sprintf(tornado_data[tornado_data$rank == "low",][["parameter_value"]], fmt = '%#.3f')),
+          size = 3, vjust = +1.3, hjust = +1.3) +
+geom_text(data = tornado_data[tornado_data$rank == "high",],
+         aes(x = xmax, y = outcome_value, 
+             label = sprintf(tornado_data[tornado_data$rank == "high",][["parameter_value"]], fmt = '%#.3f')),
+         size = 3, vjust = +1.3, hjust = -0.3) +
+geom_hline(yintercept = baseline_model_results[,"ETRANACOGENE_PROPHYLAXIS_inc_Costs"]/1000000) +
+scale_x_continuous(breaks = c(1:length(order_parameters)), 
+                 labels = order_parameters) +
+scale_y_continuous(limits=c(min*1.08,max*0.40)) +
+settings$ggplot_theme +
+theme(axis.title.y=element_blank(),
+      axis.text = element_text(size = 10),
+      legend.position = 'bottom',
+      legend.direction = "horizontal",
+      panel.grid.major.y = element_blank()) +
+ylab("Incremental Costs [Mio. EUR]") + 
+scale_fill_manual(values = color_brew, labels=c("Lower Bound", "Upper Bound")) +
+coord_flip() 
+
+# Comparison incremental NMB ETRANACOGENE vs Prophylaxis
+
+tornado_data <-fun_tornado(sens_list = sens_analysis, 
+            outcome = "ETRANACOGENE_PROPHYLAXIS_INMB", 
+            baseline = baseline_model_results[,outcome])
+order_parameters <- tornado_data$parameter[order(tornado_data$type, tornado_data$difference, tornado_data$parameter)]
+for (i in 1:length(sens_analysis)) {
+    order_parameters <- order_parameters[-2]
+}
+min <- min(tornado_data$outcome_value)
+max <- max(tornado_data$outcome_value)
+
+ggplot() + 
+geom_rect(data = tornado_data, 
+          aes(ymax=ymax, ymin=ymin, xmax=xmax, xmin=xmin, fill = type)) +
+geom_text(data = tornado_data[tornado_data$rank == "low",],
+          aes(x = xmax, y = outcome_value, 
+              label = sprintf(tornado_data[tornado_data$rank == "low",][["parameter_value"]], fmt = '%#.3f')),
+          size = 3, vjust = +1.3, hjust = +1.3) +
+geom_text(data = tornado_data[tornado_data$rank == "high",],
+         aes(x = xmax, y = outcome_value, 
+             label = sprintf(tornado_data[tornado_data$rank == "high",][["parameter_value"]], fmt = '%#.3f')),
+         size = 3, vjust = +1.3, hjust = -0.3) +
+geom_hline(yintercept = baseline_model_results[,"ETRANACOGENE_PROPHYLAXIS_INMB"]) +
+scale_x_continuous(breaks = c(1:length(order_parameters)), 
+                 labels = order_parameters) +
+scale_y_continuous(limits=c(min*0.97,max*1.03)) +
+settings$ggplot_theme +
+theme(axis.title.y=element_blank(),
+      axis.text = element_text(size = 10),
+      legend.position = 'bottom',
+      legend.direction = "horizontal",
+      panel.grid.major.y = element_blank()) +
+ylab("Incremental NMB") + 
+scale_fill_manual(values = color_brew, labels=c("Lower Bound", "Upper Bound")) +
+coord_flip() 
+
+```
+
+# System information
+
+```{r sysinfo, echo = TRUE, results = 'asis'}
+
+Sys.info()
+
+sessionInfo(package = NULL)
+
+```
+
+```{r remove, include = FALSE}
+
+rm(patient_results, model_results,
+   sens_analysis, baseline_model_results, tornado_data,
+   order_parameters, min, max)
+
+gc()
+
+```

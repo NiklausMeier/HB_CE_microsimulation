@@ -1,0 +1,191 @@
+---
+title: "Analysis of HB CE cohort"
+author: "Niklaus Meier"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 8
+    highlight: null
+    reference_docx: word_template.docx
+    toc: no
+    toc_depth: 4
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Setup -->
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+#===============================================================================
+# Figure and table numbering
+#===============================================================================
+
+figure_nums <- captioner::captioner(prefix = "**Figure ")
+table_nums <- captioner::captioner(prefix = "**Table ")
+
+#===============================================================================
+# Formating of headers parsed in cat(sprintf())
+#===============================================================================
+
+header1 <- '# %s'
+header2 <- '## %s'
+header3 <- '### %s'
+header4 <- '#### %s'
+
+#===============================================================================
+# Function for making first letter upper case
+#===============================================================================
+
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
+
+#===============================================================================
+# Load data
+#===============================================================================
+
+load(file = paste0(directories$dir_dat_deriv, "/cohort_table_ETRA.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/cohort_table_PROPH.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/cohort_table_BACK.Rdata"))
+
+load(file = paste0(directories$dir_dat_deriv, "/cycle_length_comp_LYs.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/cycle_length_comp_costs.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/cycle_length_INMB.Rdata"))
+
+```
+
+<!-- Plots -->
+
+```{r ABR, echo=FALSE}
+
+# ETRANACOGENE
+
+ggplot(data = table_ETRA, aes(x = age, y = current_abr)) +
+  geom_line(linewidth = 0.75) +
+  xlab("Age") +
+  ylab("ABR") + 
+  scale_y_continuous(limits=c(0,5),breaks=seq(0,5,1)) +
+  scale_x_continuous(limits=c(36,76),breaks=seq(36,76,5)) +
+  settings$ggplot_theme +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16))
+
+
+# Prophylaxis
+
+ggplot(data = table_PROPH, aes(x = age, y = current_abr)) +
+  geom_line(linewidth = 0.75) +
+  xlab("Age") +
+  ylab("ABR") +
+  scale_y_continuous(limits=c(0,5),breaks=seq(0,5,1)) +
+  scale_x_continuous(limits=c(36,76),breaks=seq(36,76,5)) +
+  settings$ggplot_theme +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16))
+
+
+```
+
+```{r Survival and QoL, echo=FALSE}
+
+#===============================================================================
+# Survival
+#===============================================================================
+
+# Plot
+
+color <- colorRampPalette(brewer.pal(4, "Set1") )(4)
+
+ggplot() +
+  geom_line(data = table_ETRA, aes(x = age, y = alive_corrected, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = table_PROPH, aes(x = age, y = alive_corrected, color = "Prophylaxis"),linewidth = 1) +
+  geom_line(data = table_BACK, aes(x = age, y = alive_corrected, color = "Background Mortality"),linewidth = 1) +
+  xlab("Age") +
+  ylab("S(t)") + 
+  scale_y_continuous(limits=c(0,1),breaks=seq(0,1,0.1)) +
+  scale_x_continuous(limits=c(36,111),breaks=seq(36,111,5)) +
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color[1],"Prophylaxis"=color[2],"Background Mortality"=color[4])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .80),
+        legend.text = element_text(size = 16))
+
+#===============================================================================
+# Quality of Life
+#===============================================================================
+
+ggplot() +
+  geom_line(data = table_ETRA, aes(x = age, y = utility_total, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = table_PROPH, aes(x = age, y = utility_total, color = "Prophylaxis"),linewidth = 1) +
+  xlab("Age") +
+  ylab("Quality of Life") + 
+  scale_y_continuous(limits=c(0,1),breaks=seq(0,1,0.1)) +
+  scale_x_continuous(limits=c(36,111),breaks=seq(36,111,5)) +
+  settings$ggplot_theme +
+  scale_color_manual(values = c("ETRANACOGENE"=color[1],"Prophylaxis"=color[2])) +
+  theme(axis.title.x = element_text(size = 16),
+        axis.text.x = element_text(size = 14),
+        axis.title.y = element_text(size = 16),
+        legend.position = c(.80, .80),
+        legend.text = element_text(size = 16))
+
+
+```
+
+```{r Cycle length comparison}
+
+pandoc.table(cycle_length_comp_LYs, "Comparison Life Years", style = 'rmarkdown')
+
+# We see a relevant reduction in the number of LYs based on shorter cycle lengths,
+# though the difference between one month and one week is very small
+
+pandoc.table(cycle_length_comp_costs, "Comparison Costs", style = 'rmarkdown')
+
+# For ENDOSCAPE: Costs increase considerably with shorter cycle lengths, since
+# retreatment can occur earlier with shorter cycles
+
+# For viral gene therapy and prophylaxis: 
+# We see a relevant reduction in the costs based on shorter cycle lengths,
+# though the difference between one month and one week is very small
+
+pandoc.table(cycle_length_INMB, "Comparison Incremental Net Monetary Benefit", style = 'rmarkdown')
+
+# We see a relevant reduction in the INMB based on shorter cycle lengths,
+# though the difference between one month and one week is very small
+
+
+```
+
+
+# System information
+
+```{r sysinfo, echo = TRUE, results = 'asis'}
+
+Sys.info()
+
+sessionInfo(package = NULL)
+
+```
+
+```{r remove, include = FALSE}
+
+rm(cycle_length_comp_costs, cycle_length_comp_LYs, cycle_length_INMB,
+   table_BACK, table_ENDO, table_PROPH, table_VIRAL)
+
+gc()
+
+```
