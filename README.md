@@ -106,7 +106,7 @@ If you have issues executing the code, or have other questions, please contact m
 
 ## Authors and acknowledgment
 Main developer: Niklaus Meier   
-Code Review: Katya Galactionova   
+Code review: Katya Galactionova   
 Further contributions to underlying theoretical work and publication: Hendrik Fuchs, Cedric Hermans, Mark Pletscher, Matthias Schwenkglenks   
 
 ## License
