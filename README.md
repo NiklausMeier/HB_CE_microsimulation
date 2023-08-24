@@ -39,7 +39,7 @@ In the main folder of the project folder, there are multiple numbered scripts wh
 •	**02B_analyze_cohort.Rmd:** This script creates a word file analyzing the most important output of the cohort simulation.   
 •	**03A_deterministic_micro.R:** This script executes a deterministic (or “base case”) version of the model, in which a heterogeneous population is simulated, but the other parameters of the model are fixed, rather than being probabilistically drawn.   
 •	**03B_analyze_deterministic_micro.Rmd:** This script creates a word file analyzing the most important output of the deterministic simulation.  
-•	**04A_probabilistic_micro:** This script executes a deterministic (or “base case”) version of the model, in which a heterogeneous population is simulated, and the other parameters of the model are probabilistically drawn.  
+•	**04A_probabilistic_micro:** This script executes a probabilistic version of the model, in which a heterogeneous population is simulated, and the other parameters of the model are probabilistically drawn.  
 •	**04B_analyze_probabilistic_micro.Rmd:** This script creates a word file analyzing the most important output of the probabilistic simulation.  
 •	**05A_univariate_sensitivity_analysis.R:** This script executes the deterministic model while altering individual parameters based on their probabilistic distributions.  
 •	**05B_analyze_ univariate_sensitivity_analysis.Rmd:** This script creates a word file analyzing the most important output of the univariate sensitivity analysis.  
