@@ -26,22 +26,6 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 
 #===============================================================================
-# Figure and table numbering
-#===============================================================================
-
-figure_nums <- captioner::captioner(prefix = "**Figure ")
-table_nums <- captioner::captioner(prefix = "**Table ")
-
-#===============================================================================
-# Formating of headers parsed in cat(sprintf())
-#===============================================================================
-
-header1 <- '# %s'
-header2 <- '## %s'
-header3 <- '### %s'
-header4 <- '#### %s'
-
-#===============================================================================
 # Load data
 #===============================================================================
 
@@ -78,7 +62,7 @@ convergence_table[,"ETRA vs. PROPH inc. QALYs"] <- patient_diag[["convergence"]]
 convergence_table[,"ETRA vs. PROPH inc. Costs"] <- patient_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_inc_Costs"]
 convergence_table[,"ETRA vs. PROPH inc. NMB"]   <- patient_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_INMB"]
 
-pandoc.table(convergence_table, "Diagnostics of convergence of running incremental outcomes over all patients in simulation.", style = 'rmarkdown')
+kbl(convergence_table, format = "simple", digits = 2, caption = "Diagnostics of convergence of running incremental outcomes over all patients in simulation")
 print("We used intervals of 1000 patients, and checked whether the running mean of the incremental outcomes change by more than 1%.")
 print("A 0 means that we have reached a stable value, i.e. we have achieved convergence and have a sufficient sample size, using this interval and this percentage change as a measure of sufficient stability.")
 
@@ -112,7 +96,7 @@ summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"Costs"]    <- model_results["ET
 summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"Costs"]    <- model_results["PROPHYLAXIS_cost_undisc"]
 summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[3,"Costs"]    <- summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[1,"Costs"] -                                                                                         summary_table_undisc_ETRANACOGENE_PROPHYLAXIS[2,"Costs"]
 
-pandoc.table(summary_table_undisc_ETRANACOGENE_PROPHYLAXIS, "Comparison undiscounted outcomes between ETRANACOGENE and Prophylaxis", style = 'rmarkdown')
+kbl(summary_table_undisc_ETRANACOGENE_PROPHYLAXIS, format = "simple", digits = 2, caption = "Comparison undiscounted outcomes between ETRANACOGENE and Prophylaxis")
 
 ## Comparison between discounted outcomes of ETRANACOGENE and Prophylaxis
 
@@ -142,8 +126,7 @@ summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"NMB"]      <- summary_table_disc_
 
 summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"ICER"]     <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"Costs"] /                                                                                          summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"QALYs"]
 
-pandoc.table(summary_table_disc_ETRANACOGENE_PROPHYLAXIS, "Comparison discounted outcomes between ETRANACOGENE and Prophylaxis", style = 'rmarkdown')
-
+kbl(summary_table_disc_ETRANACOGENE_PROPHYLAXIS, format = "simple", digits = 2, caption = "Comparison discounted outcomes between ETRANACOGENE and Prophylaxis")
 
 ```
 
@@ -180,7 +163,7 @@ summary_table_costs[2,"Surgery"]                     <- model_results["PROPHYLAX
 summary_table_costs[1,"Total"]                       <- sum(summary_table_costs[1, 2:ncol(summary_table_costs)])
 summary_table_costs[2,"Total"]                       <- sum(summary_table_costs[2, 2:ncol(summary_table_costs)])
 
-pandoc.table(summary_table_costs, "Undiscounted costs broken down by category", style = 'rmarkdown')
+kbl(summary_table_costs, format = "simple", digits = 2, caption = "Undiscounted costs broken down by category")
 
 ## Comparison between discounted outcomes of ETRANACOGENE and FIX Prophylaxis
 
@@ -209,9 +192,7 @@ summary_table_costs[2,"Surgery"]                     <- model_results["PROPHYLAX
 summary_table_costs[1,"Total"]                       <- sum(summary_table_costs[1, 2:ncol(summary_table_costs)])
 summary_table_costs[2,"Total"]                       <- sum(summary_table_costs[2, 2:ncol(summary_table_costs)])
 
-pandoc.table(summary_table_costs, "Discounted costs broken down by category", style = 'rmarkdown')
-
-
+kbl(summary_table_costs, format = "simple", digits = 2, caption = "Discounted costs broken down by category")
 
 ```
 
@@ -399,10 +380,10 @@ ggplot() +
         legend.text = element_text(size = 16))
 
 ggplot() +
-  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_QALYs_sum_undisc, color = "ETRANACOGENE"),linewidth = 1) +
-  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_QALYs_sum_undisc, color = "Prophylaxis"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = ETRANACOGENE_QALYs_sum_disc, color = "ETRANACOGENE"),linewidth = 1) +
+  geom_line(data = outcomes_over_time_array, aes(x = Years, y = PROPHYLAXIS_QALYs_sum_disc, color = "Prophylaxis"),linewidth = 1) +
   xlab("Years") +
-  ylab("Undiscounted cumulative QALYs over time") + 
+  ylab("Discounted cumulative QALYs over time") + 
   settings$ggplot_theme +
   scale_color_manual(values = c("ETRANACOGENE"=color_brew[1],"Viral Gene Therapy"=color_brew[1],"Prophylaxis"=color_brew[2])) +
   theme(axis.title.x = element_text(size = 16),
@@ -455,7 +436,7 @@ sessionInfo(package = NULL)
 ```{r remove, include = FALSE}
 
 rm(model, patient_results, model_results,
-   color_brew, ENDO, VIRAL, PROPH,
+   color_brew, ETRA, VIRAL, PROPH, i,
    summary_outcomes,
    summary_table_undisc_ETRANACOGENE_VIR_GENE_THERAPY,
    summary_table_undisc_ETRANACOGENE_PROPHYLAXIS,

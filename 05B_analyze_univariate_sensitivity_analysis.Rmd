@@ -26,31 +26,6 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 
 #===============================================================================
-# Figure and table numbering
-#===============================================================================
-
-figure_nums <- captioner::captioner(prefix = "**Figure ")
-table_nums <- captioner::captioner(prefix = "**Table ")
-
-#===============================================================================
-# Formating of headers parsed in cat(sprintf())
-#===============================================================================
-
-header1 <- '# %s'
-header2 <- '## %s'
-header3 <- '### %s'
-header4 <- '#### %s'
-
-#===============================================================================
-# Function for making first letter upper case
-#===============================================================================
-
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
-
-#===============================================================================
 # Load data
 #===============================================================================
 
@@ -198,6 +173,34 @@ ylab("Incremental NMB") +
 scale_fill_manual(values = color_brew, labels=c("Lower Bound", "Upper Bound")) +
 coord_flip() 
 
+# Table of upper and lower bounds
+
+columns <- c("parameter",
+             "lower Bound", "upper Bound")
+
+table_sens_parameters <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = length(sens_analysis),
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+table_sens_parameters[,"parameter"] <- names(sens_analysis)
+
+for (i in 1:length(sens_analysis)) {
+  
+  # Find lower bound position for parameter
+  lower_bound <- which(tornado_data$parameter == table_sens_parameters[i,"parameter"])[1]
+  
+  # Find upper bound position for parameter
+  upper_bound <- which(tornado_data$parameter == table_sens_parameters[i,"parameter"])[2]
+  
+  table_sens_parameters[i,"lower Bound"] <- tornado_data[lower_bound, "parameter_value" ]
+  
+  table_sens_parameters[i,"upper Bound"] <- tornado_data[upper_bound, "parameter_value" ]
+  
+}
+
+kbl(table_sens_parameters, format = "simple", digits = 2, caption = "Lower and Upper Bound of parameter values")
+
 ```
 
 # System information
@@ -214,7 +217,8 @@ sessionInfo(package = NULL)
 
 rm(patient_results, model_results,
    sens_analysis, baseline_model_results, tornado_data,
-   order_parameters, min, max)
+   order_parameters, min, max, columns,
+   table_sens_parameters,lower_bound, upper_bound)
 
 gc()
 

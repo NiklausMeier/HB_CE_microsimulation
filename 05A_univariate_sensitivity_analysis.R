@@ -20,6 +20,9 @@ start.time <- Sys.time()
 ## Load data
 load(file = paste0(directories$dir_dat_deriv, "/Germany_life_tables_weight.RData"))
 
+# We load the population from the deterministic analysis to use it here as well
+load(file = paste0(directories$dir_dat_deriv, "/deterministic_population.Rdata"))
+
 ################################################################################
 #                                                                              #
 # Baseline Analysis                                                            #
@@ -39,10 +42,9 @@ model <- fun_model_setup(cyc2day = settings$time$yr2day/4,
 model <- fun_parameter_baseline(model = model)
 model <- fun_param_sample(model = model)
 model <- fun_scenarios(model = model)
-model <- fun_gen_pop(model = model, mode = "heterogeneous")
 
-# We save our generated population so we can re-use it later
-population <- model$sim
+# We set the population in our model to that of our deterministic analysis
+model$sim <- population
 
 # We also save our baseline parameters
 param_sample <- model$params$prob_sample

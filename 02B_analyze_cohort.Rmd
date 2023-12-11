@@ -26,31 +26,6 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 
 #===============================================================================
-# Figure and table numbering
-#===============================================================================
-
-figure_nums <- captioner::captioner(prefix = "**Figure ")
-table_nums <- captioner::captioner(prefix = "**Table ")
-
-#===============================================================================
-# Formating of headers parsed in cat(sprintf())
-#===============================================================================
-
-header1 <- '# %s'
-header2 <- '## %s'
-header3 <- '### %s'
-header4 <- '#### %s'
-
-#===============================================================================
-# Function for making first letter upper case
-#===============================================================================
-
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
-
-#===============================================================================
 # Load data
 #===============================================================================
 
@@ -148,25 +123,21 @@ ggplot() +
 
 ```{r Cycle length comparison}
 
-pandoc.table(cycle_length_comp_LYs, "Comparison Life Years", style = 'rmarkdown')
+kbl(cycle_length_comp_LYs, format = "simple", digits = 2, caption = "Comparison Life Years")
 
 # We see a relevant reduction in the number of LYs based on shorter cycle lengths,
 # though the difference between one month and one week is very small
 
-pandoc.table(cycle_length_comp_costs, "Comparison Costs", style = 'rmarkdown')
-
-# For ENDOSCAPE: Costs increase considerably with shorter cycle lengths, since
-# retreatment can occur earlier with shorter cycles
+kbl(cycle_length_comp_costs, format = "simple", digits = 2, caption = "Comparison Costs")
 
 # For viral gene therapy and prophylaxis: 
 # We see a relevant reduction in the costs based on shorter cycle lengths,
 # though the difference between one month and one week is very small
 
-pandoc.table(cycle_length_INMB, "Comparison Incremental Net Monetary Benefit", style = 'rmarkdown')
+kbl(cycle_length_INMB, format = "simple", digits = 2, caption = "Comparison Incremental Net Monetary Benefit")
 
 # We see a relevant reduction in the INMB based on shorter cycle lengths,
 # though the difference between one month and one week is very small
-
 
 ```
 
@@ -184,7 +155,7 @@ sessionInfo(package = NULL)
 ```{r remove, include = FALSE}
 
 rm(cycle_length_comp_costs, cycle_length_comp_LYs, cycle_length_INMB,
-   table_BACK, table_ENDO, table_PROPH, table_VIRAL)
+   table_BACK, table_ETRA, table_PROPH, table_VIRAL, color)
 
 gc()
 

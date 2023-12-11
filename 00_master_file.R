@@ -29,7 +29,7 @@ gc()
 #===============================================================================
 
 packages <- c('ggplot2', 'RColorBrewer', 'pander', 'data.table', 'lookup',
-              'truncnorm', 'ggpubr', 'plyr','ggrepel', 'captioner', 'rmarkdown')
+              'truncnorm', 'ggpubr', 'plyr','ggrepel', 'rmarkdown', 'kableExtra')
 
 invisible(lapply(packages, function(x)
   if( !require(x, character.only = TRUE)){

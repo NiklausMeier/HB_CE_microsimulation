@@ -26,31 +26,6 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 
 #===============================================================================
-# Figure and table numbering
-#===============================================================================
-
-figure_nums <- captioner::captioner(prefix = "**Figure ")
-table_nums <- captioner::captioner(prefix = "**Table ")
-
-#===============================================================================
-# Formating of headers parsed in cat(sprintf())
-#===============================================================================
-
-header1 <- '# %s'
-header2 <- '## %s'
-header3 <- '### %s'
-header4 <- '#### %s'
-
-#===============================================================================
-# Function for making first letter upper case
-#===============================================================================
-
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
-
-#===============================================================================
 # Load data
 #===============================================================================
 
@@ -99,8 +74,7 @@ summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"NMB"]      <- summary_table_disc_
 
 summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"ICER"]     <- summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"Costs"] /                                                                                          summary_table_disc_ETRANACOGENE_PROPHYLAXIS[3,"QALYs"]
 
-pandoc.table(summary_table_disc_ETRANACOGENE_PROPHYLAXIS, "Comparison discounted outcomes between ETRANACOGENE and Prophylaxis", style = 'rmarkdown')
-
+kbl(summary_table_disc_ETRANACOGENE_PROPHYLAXIS, format = "simple", digits = 2, caption = "Comparison discounted outcomes between ETRANACOGENE and Prophylaxis")
 
 ```
 
@@ -134,9 +108,9 @@ convergence_table[,"ETRA vs. PROPH inc. QALYs"] <- model_diag[["convergence"]][,
 convergence_table[,"ETRA vs. PROPH inc. Costs"] <- model_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_inc_Costs"]
 convergence_table[,"ETRA vs. PROPH inc. NMB"]   <- model_diag[["convergence"]][,"ETRANACOGENE_PROPHYLAXIS_INMB"]
 
-pandoc.table(convergence_table, "Diagnostics of convergence of running incremental outcomes over all patients in simulation.", style = 'rmarkdown')
 print("We used intervals of 1000 patients, and checked whether the running mean of the incremental outcomes change by more than 1%.")
 print("A 0 means that we have reached a stable value, i.e. we have achieved convergence and have a sufficient sample size, using this interval and this percentage change as a measure of sufficient stability.")
+kbl(convergence_table, format = "simple", digits = 2, caption = "Diagnostics of convergence of running incremental outcomes over all patients in simulation")
 
 ```
 
@@ -166,6 +140,39 @@ ggplot() +
         axis.title.y = element_text(size = 16),
         legend.position= "none")
 
+
+## Comparison between discounted outcomes of ETRANACOGENE and FIX Prophylaxis
+
+summary_costs <- c("Treatment","ETRANACOGENE", "FIX Prophylaxis", "FIX for treatment of bleeds", "Hospitalization", "Surgery", "Total")
+
+summary_table_costs <- setNames(data.frame(matrix(data = 0,
+                                                  nrow = 2,
+                                                  ncol = length(summary_costs))), 
+                                                         summary_costs)
+
+summary_table_costs[,"Treatment"] <- c("ETRANACOGENE", "FIX Prophylaxis")
+
+summary_table_costs[1,"ETRANACOGENE"]                <- mean(model_results_combined[,"ETRANACOGENE_cost_ETRANACOGENE_disc"])
+summary_table_costs[2,"ETRANACOGENE"]                <- mean(model_results_combined[,"PROPHYLAXIS_cost_ETRANACOGENE_disc"])
+
+summary_table_costs[1,"FIX Prophylaxis"]             <- mean(model_results_combined[,"ETRANACOGENE_cost_PROPHYLAXIS_disc"])
+summary_table_costs[2,"FIX Prophylaxis"]             <- mean(model_results_combined[,"PROPHYLAXIS_cost_PROPHYLAXIS_disc"])
+  
+summary_table_costs[1,"FIX for treatment of bleeds"] <- mean(model_results_combined[,"ETRANACOGENE_cost_factor_treat_bleed_disc"])
+summary_table_costs[2,"FIX for treatment of bleeds"] <- mean(model_results_combined[,"PROPHYLAXIS_cost_factor_treat_bleed_disc"])
+  
+summary_table_costs[1,"Hospitalization"]             <- mean(model_results_combined[,"ETRANACOGENE_cost_hospitalization_disc"])
+summary_table_costs[2,"Hospitalization"]             <- mean(model_results_combined[,"PROPHYLAXIS_cost_hospitalization_disc"])
+  
+summary_table_costs[1,"Surgery"]                     <- mean(model_results_combined[,"ETRANACOGENE_cost_surgery_disc"])
+summary_table_costs[2,"Surgery"]                     <- mean(model_results_combined[,"PROPHYLAXIS_cost_surgery_disc"])
+  
+summary_table_costs[1,"Total"]                       <- sum(summary_table_costs[1, 2:ncol(summary_table_costs)])
+summary_table_costs[2,"Total"]                       <- sum(summary_table_costs[2, 2:ncol(summary_table_costs)])
+
+kbl(summary_table_costs, format = "simple", digits = 2, caption = "Discounted costs broken down by category")
+
+
 ```
 
 \newpage
@@ -180,6 +187,47 @@ print(paste0(share_dominance * 100, "% of all probabilistic simulations were dom
 
 
 ```
+
+\newpage
+
+```{r Cost-effectiveness acceptability curve (CEAC), echo=FALSE}
+
+# We recalculate the probability of therapies being cost-effective based on a shift in the willingness-to-pay
+
+columns <- c("WTP", "ED","EHLFIX")
+
+WTP <- seq(0,300000,5000)
+
+table_CEAC <- setNames(data.frame(matrix(data = 0,
+                                         nrow = length(WTP),
+                                         ncol = length(columns))), 
+                                                       columns)
+table_CEAC[,"WTP"] <- WTP
+
+for (i in 1:length(WTP)) {
+  
+  # Recalculate NMB based on new WTP
+  NMB_ED <- model_results_combined[,"ETRANACOGENE_QALYs_disc"]*WTP[i] - model_results_combined[,"ETRANACOGENE_cost_disc"]
+  NMB_EHLFIX <- model_results_combined[,"PROPHYLAXIS_QALYs_disc"]*WTP[i] - model_results_combined[,"PROPHYLAXIS_cost_disc"]
+  
+  # Count in how many simulations ED is or is not cost-effective
+  table_CEAC[i,"ED"] <- sum((NMB_ED > NMB_EHLFIX) == 1) / nrow(model_results_combined)
+  
+  table_CEAC[i,"EHLFIX"] <- sum((NMB_ED < NMB_EHLFIX) == 1) / nrow(model_results_combined)
+  
+}
+
+ggplot(table_CEAC, aes(x=WTP)) + 
+  geom_line(aes(y = ED, color = ETRA), size = 1) + 
+  geom_line(aes(y = EHLFIX, color = PROPH), size = 1) +
+  ylab("Probability of being cost-effective") + xlab("Willingness-to-pay [EUR]") +
+  settings$ggplot_theme +
+  theme(legend.position = "bottom") +
+  scale_color_manual(values = c("Prophylaxis"=color_brew[2],"ETRANACOGENE"=color_brew[1]))
+
+
+```
+
 
 # System information
 

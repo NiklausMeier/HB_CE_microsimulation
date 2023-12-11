@@ -584,7 +584,6 @@ fun_parameter_baseline <- function(model){
   model$params$ETRANACOGENE$abr$alpha   <- (model$params$ETRANACOGENE$abr$mean/model$params$ETRANACOGENE$abr$se)^2
   model$params$ETRANACOGENE$abr$beta    <- (model$params$ETRANACOGENE$abr$se^2)/model$params$ETRANACOGENE$abr$mean
   
-  
   # Test whether this replicates CI well
   mean(rgamma(10000, shape = model$params$ETRANACOGENE$abr$alpha, scale = model$params$ETRANACOGENE$abr$beta))
   quantile(rgamma(10000, shape = model$params$ETRANACOGENE$abr$alpha, scale = model$params$ETRANACOGENE$abr$beta), c(.025, .500, 0.975))
@@ -607,7 +606,7 @@ fun_parameter_baseline <- function(model){
   
   model$params$ETRANACOGENE$max_bleed_reduction_duration$mean    <- 10
   model$params$ETRANACOGENE$max_bleed_reduction_duration$l_limit <- 5
-  model$params$ETRANACOGENE$max_bleed_reduction_duration$u_limit <- 20
+  model$params$ETRANACOGENE$max_bleed_reduction_duration$u_limit <- 15
   
   ## BLEED RATE INCREASE PER YEAR
   # We have no data on how quickly the bleed rate will again increase over time
@@ -615,7 +614,7 @@ fun_parameter_baseline <- function(model){
   # We specify an expected value, an upper limit and a lower limit
   model$params$ETRANACOGENE$bleed_increase_per_year$mean    <- 0.10
   model$params$ETRANACOGENE$bleed_increase_per_year$l_limit <- 0.05
-  model$params$ETRANACOGENE$bleed_increase_per_year$u_limit <- 0.20
+  model$params$ETRANACOGENE$bleed_increase_per_year$u_limit <- 0.15
   
   ## TREATMENT SUCCESS PROBABILITY
   # 52/54 (96.3%) of patients responded to treatment and could discontinue prophylaxis

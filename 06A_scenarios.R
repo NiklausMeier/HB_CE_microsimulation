@@ -20,8 +20,8 @@ start.time <- Sys.time()
 ## Load data
 load(file = paste0(directories$dir_dat_deriv, "/Germany_life_tables_weight.RData"))
 
-# We load the population from our sensitivity analysis to use it here as well
-load(file = paste0(directories$dir_dat_deriv, "/sens_analysis_population.Rdata"))
+# We load the population from our deterministic analysis to use it here as well
+load(file = paste0(directories$dir_dat_deriv, "/deterministic_population.Rdata"))
 
 ################################################################################
 #                                                                              #
@@ -67,7 +67,7 @@ scen_analysis$price_hosp_ICU_days$name                          <- "price_hosp_I
 
 scen_analysis$ETRANACOGENE_relative_bleed_reduction$range           <- seq(0.1, 1.0, by = 0.1)
 scen_analysis$ETRANACOGENE_max_bleed_reduction_duration$range       <- c(1,5,10,15,20,25,30)
-scen_analysis$ETRANACOGENE_bleed_increase_per_year$range            <- seq(0.05, 0.25, by = 0.05)
+scen_analysis$ETRANACOGENE_bleed_increase_per_year$range            <- seq(0.05, 0.50, by = 0.05)
 scen_analysis$ETRANACOGENE_success_prob$range                       <- seq(0.5, 1.0)
 
 #-------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ scen_analysis$price_hosp_ICU_days$range                          <- 6000
 
 model <- fun_model_setup(cyc2day = settings$time$yr2day/4,
                          ncycle = (92*4)+1,
-                         npatients = length( population$ETRANACOGENE[[1]][1,1,]),
+                         npatients = length(population$ETRANACOGENE[[1]][1,1,]),
                          nsim = 1,
                          mode = "deterministic",
                          treatments = c("ETRANACOGENE","PROPHYLAXIS"),
@@ -171,14 +171,12 @@ for (j in 1:length(scen_analysis)) {
   
 }
 
-
 # Save scenario analysis results to list based on parameter
 
 for (j in 1:length(scen_analysis)) {
   scen_analysis[[j]][["patient_results"]] <- subset(patient_results_combined,scen_analysis_param == paste0(scen_analysis[[j]][["name"]]))
   scen_analysis[[j]][["model_results"]]   <- subset(model_results_combined,scen_analysis_param == paste0(scen_analysis[[j]][["name"]]))
 }
-
 
 ################################################################################
 #                                                                              #

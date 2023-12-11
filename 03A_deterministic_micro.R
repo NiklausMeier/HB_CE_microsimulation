@@ -99,6 +99,9 @@ model <- fun_scenarios(model = model)
 
 model <- fun_gen_pop(model = model, mode = "heterogeneous")
 
+# We save our generated population so we can re-use it later
+population <- model$sim
+
 #===============================================================================
 # Treatment
 #===============================================================================
@@ -265,6 +268,7 @@ save(patient_results, file = paste0(directories$dir_dat_deriv, '/deterministic_p
 save(model_results, file = paste0(directories$dir_dat_deriv, '/deterministic_model_results.Rdata'))
 save(patient_diag, file = paste0(directories$dir_dat_deriv, '/deterministic_diagnostics.Rdata'))
 save(outcomes_over_time_array, file = paste0(directories$dir_dat_deriv, '/deterministic_outcomes_over_time.Rdata'))
+save(population, file = paste0(directories$dir_dat_deriv, '/deterministic_population.Rdata'))
 
 ################################################################################
 #                                                                              #
@@ -273,7 +277,7 @@ save(outcomes_over_time_array, file = paste0(directories$dir_dat_deriv, '/determ
 ################################################################################
 
 rm(model, life_tables_weight, patient_results, model_results,
-   patient_diag, outcomes_over_time, outcomes_over_time_array)
+   patient_diag, outcomes_over_time, outcomes_over_time_array, population)
 
 ################################################################################
 #                                                                              #
