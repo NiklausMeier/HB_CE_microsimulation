@@ -8,7 +8,7 @@ This repository contains the R code for a de novo cost-effectiveness microsimula
 **Comparator:** Prophylactic extended half-life factor IX (EHL-FIX)  
 **Outcomes:** Discounted life years, quality-adjusted life years, costs, incremental cost-effectiveness ratio, incremental net monetary benefit  
 
-A publication of the work based on this model has been accepted by PharmacoEconomics - Open and will be published soon.
+A publication of the work based on this model has been accepted by PharmacoEconomics - Open and can be accessed at https://link.springer.com/article/10.1007/s41669-024-00480-z.
 
 I have uploaded the model with all required R code and data for the sake of transparency and as a resource for future modellers. 
 If interested, please feel free to develop the model further, e.g., by adding further treatment strategies, sources of costs, or other data sources.
