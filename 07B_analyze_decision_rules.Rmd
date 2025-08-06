@@ -1,0 +1,271 @@
+---
+title: "Analysis of HB CE decision rules"
+author: "Niklaus Meier"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 8
+    highlight: null
+    reference_docx: word_template.docx
+    toc: no
+    toc_depth: 4
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Setup -->
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+#===============================================================================
+# Load data
+#===============================================================================
+
+load(file = paste0(directories$dir_dat_deriv, "/dec_rules.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/dec_rules_diagnostics.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/dec_rules_model_results.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, "/dec_rules_patient_results.Rdata"))
+
+```
+
+\newpage
+
+```{r Convergence, echo=FALSE}
+
+for (i in 1:3) {
+  print(ggarrange(plotlist = patient_diag$plots[(1+(i-1)*4):(4+(i-1)*4)],
+                  labels = colnames(patient_diag$convergence)[(1+(i-1)*4):(4+(i-1)*4)],
+                  ncol = 2, nrow = 2,
+                  font.label = list(size = 10, color = "dark red", face = "bold")))
+}
+
+## Plots
+
+color_brew <- colorRampPalette(brewer.pal(4, "Set1") )(4)
+
+ONDEMAND      <- "On-Demand"
+ETRA_ONDEMAND <- "ED into On-Demand"
+PROPHYLAXIS   <- "Prophylaxis"
+ETRA_PROPH    <- "ED into Prophylaxis"
+
+# Running means
+
+ggplot(data = patient_diag$cumulative_mean_interval) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ONDEMAND_QALYs_disc"], color = ONDEMAND)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ETRA_ONDEMAND_QALYs_disc"], color = ETRA_ONDEMAND)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"PROPHYLAXIS_QALYs_disc"], color = PROPHYLAXIS)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ETRA_PROPH_QALYs_disc"], color = ETRA_PROPH)) +
+  ylab("Running mean QALYs") +
+  xlab("Intervals") +
+  settings$ggplot_theme 
+
+ggplot(data = patient_diag$cumulative_mean_interval) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ONDEMAND_cost_disc"], color = ONDEMAND)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ETRA_ONDEMAND_cost_disc"], color = ETRA_ONDEMAND)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"PROPHYLAXIS_cost_disc"], color = PROPHYLAXIS)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ETRA_PROPH_cost_disc"], color = ETRA_PROPH)) +
+  ylab("Running mean Costs") +
+  xlab("Intervals") +
+  settings$ggplot_theme 
+
+ggplot(data = patient_diag$cumulative_mean_interval) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ONDEMAND_NMB"], color = ONDEMAND)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ETRA_ONDEMAND_NMB"], color = ETRA_ONDEMAND)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"PROPHYLAXIS_NMB"], color = PROPHYLAXIS)) +
+  geom_line(aes(x = 1:nrow(patient_diag$cumulative_mean_interval), y = patient_diag$cumulative_mean_interval[,"ETRA_PROPH_NMB"], color = ETRA_PROPH)) +
+  ylab("Running mean NMB") +
+  xlab("Intervals") +
+  settings$ggplot_theme 
+
+kbl(patient_diag$convergence[,1:4], format = "simple", digits = 0, caption = "Convergence QALYs")
+kbl(patient_diag$convergence[,5:8], format = "simple", digits = 0, caption = "Convergence Costs")
+kbl(patient_diag$convergence[,9:12], format = "simple", digits = 0, caption = "Convergence NMB")
+
+
+```
+
+\newpage
+
+```{r Recursive partitioning, echo=FALSE}
+
+# Can check CP table and plot CP to check how this number of splits was decided
+# Can also plot size of tree to see what complexity should be chosen for a given tree size
+dec_rules[["rpart"]][["tree_model"]][["cptable"]]
+plotcp(dec_rules[["rpart"]]$tree_model)
+
+# Open a graphics device to save the plot as an EMF file
+# win.metafile("decision_tree.emf")
+
+# Generate the plot
+rpart.plot(dec_rules$rpart$tree_model, type = 4, nn = FALSE, extra = 2)
+
+# Close the graphics device
+# dev.off()
+
+```
+
+\newpage
+
+```{r Multi-arm causal forest, echo=FALSE}
+
+# Print the causal forest model
+knitr::include_graphics(paste0(directories$dir_dat_deriv, "policy_tree.png"))
+
+```
+
+\newpage
+
+```{r LASSO, echo=FALSE}
+
+# Print the LASSO model
+tidy_summary <- tidy(dec_rules$LASSO$model)
+tidy_summary[, 2:5] <- round(tidy_summary[, 2:5], 2)
+ft <- flextable(tidy_summary)
+ft <- theme_vanilla(ft)
+ft <- autofit(ft)
+ft
+
+```
+
+\newpage
+
+```{r Comparison, echo=FALSE}
+
+# Identify numeric columns and format them
+comp_table <- dec_rules[["comp_table"]]
+
+# Add Regret and EVIC
+for (i in 1:nrow(comp_table)) {
+  
+  comp_table[i,"Regret"] <- abs(comp_table["OPTIMAL","NMB"] - comp_table[i,"NMB"])
+  
+  if (i <= dec_rules$ntreat) {
+    
+    comp_table[i,"EVIC"]   <- 0
+    
+  } else {
+    
+    comp_table[i,"EVIC"]   <- abs(comp_table[i,"NMB"] - comp_table[dec_rules$opt_uniform,"NMB"])
+  }
+}
+
+numeric_cols <- sapply(comp_table, is.numeric)
+comp_table[, numeric_cols] <- lapply(comp_table[, numeric_cols], function(x) comma(x, accuracy = 0.01))
+
+# Print the table
+kbl(comp_table, format = "simple", digits = 2, caption = "Comparison of treatment assignments and decision rules")
+
+
+```
+
+\newpage
+
+```{r Uncertainty, echo=FALSE}
+
+# Lowest and highest values
+dec_rules$rpart$prob$best_combination_vars_min
+dec_rules$rpart$prob$best_combination_vars_max
+
+# Quantiles
+quantile(dec_rules[["rpart"]][["prob"]][["best_combination_vars"]][,"baseline_abr_ind"], 0.025)
+quantile(dec_rules[["rpart"]][["prob"]][["best_combination_vars"]][,"baseline_abr_ind"], 0.975)
+
+quantile(dec_rules[["rpart"]][["prob"]][["best_combination_vars"]][,"age"], 0.025)
+quantile(dec_rules[["rpart"]][["prob"]][["best_combination_vars"]][,"age"], 0.975)
+
+# Histogramm of which variables were how frequent
+hist(dec_rules[["rpart"]][["prob"]][["best_combination_vars"]][,"baseline_abr_ind"], breaks = 20)
+hist(dec_rules[["rpart"]][["prob"]][["best_combination_vars"]][,"age"], breaks = 20)
+
+# Histogramm of prediction accuracy
+hist(dec_rules[["rpart"]][["prob"]][["treat_prediction_accuracy"]], breaks = 20)
+
+# Density Plots
+
+df <- dec_rules[["rpart"]][["prob"]][["best_combination_vars"]]
+
+ggplot(df, aes(x = baseline_abr_ind, y = age)) +
+  geom_count() +
+  stat_ellipse(level = 0.95, color = "red", size = 1) + 
+  annotate("point", x = mean(df$baseline_abr_ind), y = mean(df$age),  
+           shape = 3, color = "red", size = 4, stroke = 2) + 
+  labs(title = "Scatter Plot with Frequency Count",
+       subtitle = "Point size represents the number of occurrences",
+       x = "ABR",
+       y = "Age") +
+  theme_minimal()
+
+ggplot(df, aes(x = baseline_abr_ind, y = age)) +
+  geom_jitter(width = 0.2, height = 0.2, alpha = 0.3) + 
+  stat_ellipse(level = 0.95, color = "red", size = 1) +  
+  annotate("point", x = mean(df$baseline_abr_ind), y = mean(df$age),  
+           shape = 3, color = "red", size = 4, stroke = 2) + 
+  labs(title = "Scatter Plot with Jitter, 95% Ellipse, and Mean Marker",
+       subtitle = "Mean is marked with a large red cross (+)",
+       x = "ABR",
+       y = "Age") +
+  theme_minimal()
+
+# Heat map with outliers
+
+# Count occurrences of each (x, y) pair
+df_counts <- df %>%
+  count(baseline_abr_ind, age, name = "count")
+
+# Determine the lowest density threshold (e.g., bottom 10% of densities)
+low_density_threshold <- quantile(df_counts$count, probs = 0.1, na.rm = TRUE)
+
+# Identify points in the lowest density category
+low_density_points <- df_counts %>%
+  filter(count <= low_density_threshold)
+
+# Generate the heatmap
+ggplot(df, aes(x = baseline_abr_ind, y = age)) +
+  stat_density2d_filled(aes(fill = after_stat(level)), alpha = 0.8, bins = 9) +  # Contour heatmap
+  geom_point(data = low_density_points, 
+             aes(x = baseline_abr_ind, y = age), 
+             shape = 19, 
+             size = 1.2, 
+             color = "black", 
+             alpha = 1) +  # Highlighting lowest density points
+  scale_fill_manual(
+    values = c(setNames(c(NA, RColorBrewer::brewer.pal(9, "YlOrRd")[-1]), levels(df_counts$count))),
+    na.value = NA  # Ensures missing values remain fully transparent
+  ) + 
+  labs(fill = "Density Level",  # Customize legend title
+       x = "ABR",
+       y = "Age") +
+  theme_minimal()
+
+
+```
+
+
+# System information
+
+```{r sysinfo, echo = TRUE, results = 'asis'}
+
+Sys.info()
+
+sessionInfo(package = NULL)
+
+```
+
+```{r remove, include = FALSE}
+
+rm(dec_rules, patient_diag, 
+   MRC, PRC,
+   color_brew, ETRA_ONDEMAND, ETRA_PROPH, ONDEMAND, PROPHYLAXIS,
+   i)
+
+gc()
+
+```

@@ -31,7 +31,6 @@ fun_diagnostics_plots <- function(results_combined){
   # Plots
   #===============================================================================
   
-
   colNames <- names(cumulative_mean)
   
   cumulative_mean_plots <- vector('list', length(colNames))
@@ -43,6 +42,8 @@ fun_diagnostics_plots <- function(results_combined){
       
       p1 <- ggplot(data = cumulative_mean, aes_string(x = 1:nrow(cumulative_mean), y = cumulative_mean[,colNames[i]])) +
         geom_line() +
+        xlab(names(cumulative_mean)[i]) +
+        ylab("Value") + 
         settings$ggplot_theme
       
       print(p1)

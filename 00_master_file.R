@@ -5,7 +5,7 @@
 # Outcome: Costs, QALYS, ICER                                                  #
 # Task: Master file                                                            #
 # Author: Niklaus Meier                                                        #
-# R version: 4.2.1                                                             #
+# R version: 4.5.0                                                             #
 #                                                                              #
 ################################################################################
 
@@ -29,7 +29,10 @@ gc()
 #===============================================================================
 
 packages <- c('ggplot2', 'RColorBrewer', 'pander', 'data.table', 'lookup',
-              'truncnorm', 'ggpubr', 'plyr','ggrepel', 'rmarkdown', 'kableExtra')
+              'truncnorm', 'ggpubr', 'plyr','ggrepel', 'rmarkdown', 'kableExtra',
+              'mgcv', 'grf', 'policytree', 'rpart', 'rpart.plot', 'rattle',
+              'glmnet', 'fastDummies', 'DiagrammeRsvg', 'broom', 'flextable',
+              'scales', 'dplyr', 'MASS', 'rsvg', 'knitr')
 
 invisible(lapply(packages, function(x)
   if( !require(x, character.only = TRUE)){
@@ -122,6 +125,8 @@ source(paste0(directories$dir_fun, "fun_scenarios.R"))
 source(paste0(directories$dir_fun, "fun_gen_pop.R"))
 source(paste0(directories$dir_fun, "fun_ETRANACOGENE_abr.R"))
 source(paste0(directories$dir_fun, "fun_PROPHYLAXIS_abr.R"))
+source(paste0(directories$dir_fun, "fun_ONDEMAND_abr.R"))
+source(paste0(directories$dir_fun, "fun_ETRA_PROPH_and_OD_abr.R"))
 source(paste0(directories$dir_fun, "fun_bleeds_death.R"))
 source(paste0(directories$dir_fun, "fun_resources.R"))
 source(paste0(directories$dir_fun, "fun_utility.R"))
@@ -133,6 +138,15 @@ source(paste0(directories$dir_fun, "fun_results.R"))
 source(paste0(directories$dir_fun, "fun_diagnostics.R"))
 source(paste0(directories$dir_fun, "fun_diagnostics_plots.R"))
 source(paste0(directories$dir_fun, "fun_tornado.R"))
+
+## Load functions to generate and analyze decision rules
+source(paste0(directories$dir_fun, "fun_opt_treat.R"))
+source(paste0(directories$dir_fun, "fun_LASSO.R"))
+# source(paste0(directories$dir_fun, "fun_MACF(OLD).R")) No longer needed
+source(paste0(directories$dir_fun, "fun_policy_tree.R"))
+source(paste0(directories$dir_fun, "fun_rpart.R"))
+source(paste0(directories$dir_fun, "fun_var_combinations.R"))
+source(paste0(directories$dir_fun, "fun_rpart_prob.R"))
 
 ################################################################################
 #                                                                              #
@@ -191,4 +205,29 @@ rmarkdown::render('06B_analyze_scenarios.Rmd',
                                       settings$timestamp,
                                       '.docx',
                                       sep = ''))
+
+set.seed(settings$seed)
+source('07A_decision_rules.R', encoding = 'utf-8')
+
+rmarkdown::render('07B_analyze_decision_rules.Rmd',
+                  output_file = paste(directories$dir_res,
+                                      'decision_rules_',
+                                      settings$timestamp,
+                                      '.docx',
+                                      sep = ''))
+
+set.seed(settings$seed)
+source('08A_decision_rules_sc1.R', encoding = 'utf-8')
+
+set.seed(settings$seed)
+source('08B_decision_rules_sc2.R', encoding = 'utf-8')
+
+rmarkdown::render('08C_analyze_decision_rules_scenarios.Rmd',
+                  output_file = paste(directories$dir_res,
+                                      'decision_rules_scenarios',
+                                      settings$timestamp,
+                                      '.docx',
+                                      sep = ''))
+
+
 

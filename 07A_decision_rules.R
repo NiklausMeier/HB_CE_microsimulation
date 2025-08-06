@@ -3,7 +3,8 @@
 # Study: Cost-Effectiveness Analysis of Gene Therapy for Haemophilia B         #
 # Design: Cost-Effectiveness Model using Bleeds as a continuous variable       #
 # Outcome: Costs, QALYS, ICER                                                  #
-# Task: Run probabilistic version of model with various parameters             #
+# Task: Use probabilistic version model as basis for individualized            #
+# optimal treatment decision rules                                             #
 # Author: Niklaus Meier                                                        #
 # R version: 4.5.0                                                             #
 #                                                                              #
@@ -37,7 +38,11 @@ nloops <- 100
 
 ## We prepare an empty data frame to save our results across multiple loops
 # of our probabilistic sensitivity analysis
-model_results_combined   <- data.frame()
+# We save both the Model Results Combined (MRC) and the
+# Patient Results Combined (PRC)
+
+MRC   <- data.frame()
+PRC   <- data.frame()
 
 ################################################################################
 #                                                                              #
@@ -53,18 +58,12 @@ for (i in 1:nloops){
   #                                                                              #
   ################################################################################
   
-  #' To prepare the model and set parameters, the next functions must be applied in the following order:
-  #' 1. Generate model object: fun_model_setup
-  #' 2. Set baseline parameters: fun_parameter_baseline
-  #' 3. Sample probabilistic parameters: fun_param_sample
-  #' 4. Set scenarios: fun_scenarios
-  
   model <- fun_model_setup(cyc2day = settings$time$yr2day/4,
                            ncycle = (92*4)+1,
                            npatients = 100,
                            nsim = 20,
                            mode = "probabilistic",
-                           treatments = c("ETRANACOGENE", "PROPHYLAXIS"),
+                           treatments = c("ONDEMAND","ETRA_ONDEMAND","PROPHYLAXIS","ETRA_PROPH"),
                            threshold = 50000)
   
   model <- fun_parameter_baseline(model = model)
@@ -76,18 +75,14 @@ for (i in 1:nloops){
   # Run Model                                                                    #
   #                                                                              #
   ################################################################################
+ 
+  model <- fun_gen_pop(model = model, mode = "heterogeneous") # Must be heterogeneous or doesn't work right
   
-  #' Using the model structure, the next functions must be applied in the following order:
-  #' 1. Generate population: fun_gen_pop
-  #' 2. Determine ABR based on treatment: fun_ETRANACOGENE_abr, or fun_PROPHYLAXIS_abr
-  #' 3. Determine bleeding and death: fun_bleeds_death
-  #' 4. Determine resource use and costs: fun_resources
-  #' 5. Determine utilities and QALYs: fun_utility
-  
-  model <- fun_gen_pop(model = model, mode = "heterogeneous")
-  model <- fun_ETRANACOGENE_abr(model = model, mode = "random")
   model <- fun_PROPHYLAXIS_abr(model = model)
-  model <- fun_bleeds_death(model = model, mode = "expected_value")
+  model <- fun_ONDEMAND_abr(model = model)
+  model <- fun_ETRA_PROPH_and_OD_abr(model = model, mode = "random") # Very important here: Random treatment success rather than expected value makes better treatment predictions harder
+  
+  model <- fun_bleeds_death(model = model, mode = "expected_value") # Very important here: Random death rather than expected value makes better treatment predictions harder
   model <- fun_resources(model = model)
   model <- fun_utility(model = model)
   model <- fun_costs(model = model)
@@ -98,11 +93,13 @@ for (i in 1:nloops){
   #                                                                              #
   ################################################################################
   
-  # Save results of model to data frame
+  # Save results to data frame
   model_results   <- fun_results(model, mode = "simulation")
+  patient_results <- fun_results(model, mode = "patient")
   
   # Combine results of this loop with results of previous loops
-  model_results_combined   <- rbind(model_results_combined, model_results)
+  MRC   <- rbind(MRC, model_results)
+  PRC   <- rbind(PRC, patient_results)
   
   print(paste0(i, "/", nloops, " loops completed"))
   gc()
@@ -111,7 +108,64 @@ for (i in 1:nloops){
 
 ################################################################################
 #                                                                              #
-# Diagnostics                                                                  #
+# Optimal treatment                                                            #
+#                                                                              #
+################################################################################
+
+print('Identifying optimal treatment allocation')
+
+# Identify the optimal individual treatments
+dec_rules <- fun_opt_treat(data = PRC, 
+                           ntreat = length(model[["sim"]]), 
+                           treatments = names(model[["sim"]]),
+                           covariates = c("baseline_abr_ind", "age", "sex"),
+                           optimize = "NMB")
+
+################################################################################
+#                                                                              #
+# LASSO                                                                        #
+#                                                                              #
+################################################################################
+
+print('LASSO')
+dec_rules <- fun_LASSO(dec_rules)
+
+################################################################################
+#                                                                              #
+# Recursive Partitioning                                                       #
+#                                                                              #
+################################################################################
+
+print('Recursive Partitioning')
+
+# Run recursive partitioning (rpart) to get optimal structure of decision tree
+dec_rules <- fun_rpart(dec_rules = dec_rules, 
+                       des_split = 2,
+                       treatments = names(model[["sim"]]),
+                       nsim = nloops * model$struct$nsim)
+
+################################################################################
+#                                                                              #
+# POLICY TREE                                                                  #
+#                                                                              #
+################################################################################
+
+print('Policy Tree')
+
+# Apply a policy tree to identify decision rules
+dec_rules <- fun_policy_tree(dec_rules = dec_rules, 
+                             hybrid    = FALSE,
+                             pt_depth  = 2)
+
+# Plot policy tree
+plot(dec_rules$PT$policy_tree, leaf.labels = levels(dec_rules[["W"]]))
+html_plot <- plot(dec_rules$PT$policy_tree, leaf.labels = levels(dec_rules[["W"]]))
+svg <- export_svg(html_plot)
+rsvg::rsvg_png(charToRaw(svg), paste0(directories$dir_dat_deriv, "policy_tree.png"), width = 1300, height = 500)
+
+################################################################################
+#                                                                              #
+# Convergence                                                                  #
 #                                                                              #
 ################################################################################
 
@@ -122,10 +176,42 @@ for (i in 1:nloops){
 # GOOD: 500 patients and interval of 100. 500 / 100 = 5 (whole number)
 # BAD: 500 patients and interval of 200. 500 / 200 = 2.5 (not whole number)
 
-model_diag <- fun_diagnostics(model_results_combined, interval = 5, percentage = 0.01 )
+patient_diag <- fun_diagnostics(PRC, 
+                                interval = nrow(PRC)/10, 
+                                percentage = 0.01 )
 
 # Convergence tables
-model_diag$convergence
+patient_diag$convergence
+
+outcomes <- c("ONDEMAND_QALYs_disc", "ETRA_ONDEMAND_QALYs_disc",
+              "PROPHYLAXIS_QALYs_disc", "ETRA_PROPH_QALYs_disc",
+              "ONDEMAND_cost_disc", "ETRA_ONDEMAND_cost_disc",
+              "PROPHYLAXIS_cost_disc", "ETRA_PROPH_cost_disc",
+              "ONDEMAND_NMB", "ETRA_ONDEMAND_NMB",
+              "PROPHYLAXIS_NMB", "ETRA_PROPH_NMB")
+
+patient_diag$plots <- fun_diagnostics_plots(patient_results[,outcomes])
+patient_diag$convergence <- patient_diag$convergence[,outcomes]
+
+## Way to take quick look at results
+# dec_rules$comp_table
+# count(dec_rules[["opt_treat"]][["OPTIMAL"]])
+# count(dec_rules[["rpart"]][["predicted"]])
+
+################################################################################
+#                                                                              #
+# Probabilistic Uncertainty with Recursive Partitioning                        #
+#                                                                              #
+################################################################################
+
+# Get all possible variable combinations
+dec_rules <- fun_var_combinations(dec_rules,
+                                  lower_percentile = 0.05,
+                                  upper_percentile = 0.95)
+
+# Find optimal version of decision tree within each probabilistic simulation
+dec_rules <- fun_rpart_prob(dec_rules)
+
 
 ################################################################################
 #                                                                              #
@@ -133,8 +219,10 @@ model_diag$convergence
 #                                                                              #
 ################################################################################
 
-save(model_results_combined, file = paste0(directories$dir_dat_deriv, '/probabilistic_model_results.Rdata'))
-save(model_diag, file = paste0(directories$dir_dat_deriv, '/probabilistic_model_diagnostics.Rdata'))
+save(MRC, file = paste0(directories$dir_dat_deriv, '/dec_rules_model_results.Rdata'))
+save(PRC, file = paste0(directories$dir_dat_deriv, '/dec_rules_patient_results.Rdata'))
+save(dec_rules, file = paste0(directories$dir_dat_deriv, '/dec_rules.Rdata'))
+save(patient_diag, file = paste0(directories$dir_dat_deriv, '/dec_rules_diagnostics.Rdata'))
 
 ################################################################################
 #                                                                              #
@@ -142,9 +230,10 @@ save(model_diag, file = paste0(directories$dir_dat_deriv, '/probabilistic_model_
 #                                                                              #
 ################################################################################
 
-rm(model, i, life_tables_weight, nloops,
-   model_results, model_results_combined,
-   model_diag)
+rm(i, life_tables_weight, nloops, outcomes,
+   model, model_results, MRC,
+   patient_results, PRC,
+   dec_rules, patient_diag)
 
 ################################################################################
 #                                                                              #
@@ -157,4 +246,3 @@ end.time <- Sys.time()
 print(paste('Run time =', round(as.numeric(end.time, units = "secs") - as.numeric(start.time, units = "secs"), 2)/60, 'minutes', sep = ' '))
 
 gc()
-

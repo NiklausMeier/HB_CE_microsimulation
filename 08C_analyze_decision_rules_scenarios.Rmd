@@ -1,0 +1,102 @@
+---
+title: "Analysis of HB CE probabilistic model"
+author: "Niklaus Meier"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output: 
+  word_document:
+    fig_caption: yes
+    fig_height: 6
+    fig_width: 8
+    highlight: null
+    reference_docx: word_template.docx
+    toc: no
+    toc_depth: 4
+  # html_document:
+  #   toc: true
+  #   toc_float: true
+  #   number_sections: true
+editor_options: 
+  chunk_output_type: console
+---
+
+<!-- Setup -->
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+
+#===============================================================================
+# Load data
+#===============================================================================
+
+load(file = paste0(directories$dir_dat_deriv, "/dec_rules.Rdata"))
+load(file = paste0(directories$dir_dat_deriv, '/dec_rules_sc1.Rdata'))
+load(file = paste0(directories$dir_dat_deriv, '/dec_rules_sc2.Rdata'))
+
+```
+
+\newpage
+
+```{r Scenario comparison 1, echo=FALSE}
+
+columns <- c("","Base Case", 
+             "Scenario 1: Random death", 
+             "Scenario 2: No treatment failure")
+
+scenario_table_comparison <- setNames(data.frame(matrix(data = 0,
+                                                       nrow = 5,
+                                                       ncol = length(columns))), 
+                                                              columns)
+
+scenario_table_comparison[,1] <- c("Optimal individualized treament (a)",
+                                   "Optimal uniform treatment strategy (b)",
+                                   "ITR classification tree (c)",
+                                   "Regret (a-c)",
+                                   "EVIC (b-c)")
+
+# Base Case
+scenario_table_comparison[1,2] <- dec_rules[["comp_table"]]["OPTIMAL","NMB"]
+scenario_table_comparison[2,2] <- dec_rules[["comp_table"]][dec_rules$opt_uniform,"NMB"]
+scenario_table_comparison[3,2] <- dec_rules[["comp_table"]]["RECURSIVE_PARTITIONING","NMB"]
+scenario_table_comparison[4,2] <- abs(scenario_table_comparison[1,2] - scenario_table_comparison[3,2]) 
+scenario_table_comparison[5,2] <- abs(scenario_table_comparison[2,2] - scenario_table_comparison[3,2]) 
+  
+# Scenario 1
+scenario_table_comparison[1,3] <- dec_rules_sc1[["comp_table"]]["OPTIMAL","NMB"]
+scenario_table_comparison[2,3] <- dec_rules_sc1[["comp_table"]][dec_rules_sc1$opt_uniform,"NMB"]
+scenario_table_comparison[3,3] <- dec_rules_sc1[["comp_table"]]["RECURSIVE_PARTITIONING","NMB"]
+scenario_table_comparison[4,3] <- abs(scenario_table_comparison[1,3] - scenario_table_comparison[3,3]) 
+scenario_table_comparison[5,3] <- abs(scenario_table_comparison[2,3] - scenario_table_comparison[3,3]) 
+
+# Scenario 2
+scenario_table_comparison[1,4] <- dec_rules_sc2[["comp_table"]]["OPTIMAL","NMB"]
+scenario_table_comparison[2,4] <- dec_rules_sc1[["comp_table"]][dec_rules_sc2$opt_uniform,"NMB"]
+scenario_table_comparison[3,4] <- dec_rules_sc2[["comp_table"]]["RECURSIVE_PARTITIONING","NMB"]  
+scenario_table_comparison[4,4] <- abs(scenario_table_comparison[1,4] - scenario_table_comparison[2,4]) 
+scenario_table_comparison[5,4] <- abs(scenario_table_comparison[2,4] - scenario_table_comparison[3,4])
+
+# Output table
+kbl(scenario_table_comparison, format = "simple", digits = 0, caption = "Comparison between base case and two scenarios in terms of Net Monetary Benefit regarding Regret and EVIC")
+
+```
+
+\newpage
+
+# System information
+
+```{r sysinfo, echo = TRUE, results = 'asis'}
+
+Sys.info()
+
+sessionInfo(package = NULL)
+
+```
+
+```{r remove, include = FALSE}
+
+rm(dec_rules, dec_rules_sc1, dec_rules_sc2, 
+   columns, scenario_table_comparison)
+
+gc()
+
+```

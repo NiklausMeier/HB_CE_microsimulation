@@ -5,7 +5,7 @@
 # Outcome: Costs, QALYS, ICER                                                  #
 # Task: Univariate sensitivity analysis                                        #
 # Author: Niklaus Meier                                                        #
-# R version: 4.2.1                                                             #
+# R version: 4.5.0                                                             #
 #                                                                              #
 ################################################################################
 
@@ -268,19 +268,15 @@ for (j in 1:length(sens_analysis)) {
   for (i in 1:length(sens_analysis[[j]][["range"]])) {
     
     # We reset the population in our model to that of our baseline model
-    
     model$sim <- population
     
     # We reset parameters in model
-    
     model$params$prob_sample <- param_sample
     
     # We assign the correct parameter value for our sensitivity analysis
-    
     model[["params"]][["prob_sample"]][,paste0(sens_analysis[[j]][["name"]])] <- sens_analysis[[j]][["range"]][[i]]
     
     # Adjust other bleeds which are directly dependent on joint bleeds
-    
     model[["params"]][["prob_sample"]][,"share_other_bleeds"] <- 1 - model[["params"]][["prob_sample"]][,"share_joint_bleeds"]
     
     # Run Model

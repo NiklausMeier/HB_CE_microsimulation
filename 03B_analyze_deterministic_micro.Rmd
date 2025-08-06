@@ -210,7 +210,7 @@ ggplot(data = patient_results) +
   geom_point(aes(x = PROPHYLAXIS_QALYs_disc , y = PROPHYLAXIS_cost_disc/1000000, color = PROPH, shape = PROPH)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Discounted Costs [Mio. EUR]") + xlab("Discounted QALYs") +
+  ylab("Discounted Costs [million EUR]") + xlab("Discounted QALYs") +
   settings$ggplot_theme +
   scale_color_manual(values = c("Etranacogene dezaparvovec"=color_brew[1],"FIX prophylaxis"=color_brew[2])) +
   scale_shape_manual(values = c("Etranacogene dezaparvovec"=15,"FIX prophylaxis"=16)) +
@@ -233,7 +233,7 @@ ggplot() +
   scale_x_continuous(limits=c(-4,4),breaks=seq(-4,4,1)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  ylab("Cost Difference [million EUR]") + xlab("QALY Difference") +
   settings$ggplot_theme +
   scale_color_manual(values = c("Prophylaxis"=color_brew[2])) +
   theme(axis.title.x = element_text(size = 16),

@@ -53,28 +53,28 @@ print("Outcomes depending on ED relative bleed reduction parameter")
 ggplot(scen_analysis$ETRANACOGENE_relative_bleed_reduction$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
   geom_point()+
   geom_text(aes(label=ETRANACOGENE_relative_bleed_reduction), nudge_x = 0.02, nudge_y = 0.02, check_overlap = TRUE, col = "red") + 
-  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  ylab("Costs [million EUR]") + xlab("QALYs") +
   settings$ggplot_theme
 
 print("Outcomes depending on ED maximum bleed reduction period parameter")
 ggplot(scen_analysis$ETRANACOGENE_max_bleed_reduction_duration$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
   geom_point()+
   geom_text(aes(label=ETRANACOGENE_max_bleed_reduction_duration), nudge_x = 0.01, nudge_y = 0.01, check_overlap = TRUE, col = "red") + 
-  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  ylab("Costs [million EUR]") + xlab("QALYs") +
   settings$ggplot_theme
 
 print("Outcomes depending on ED bleed rate increase per year parameter")
 ggplot(scen_analysis$ETRANACOGENE_bleed_increase_per_year$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
   geom_point()+
   geom_text(aes(label=ETRANACOGENE_bleed_increase_per_year), nudge_x = 0.01, nudge_y = 0.01, check_overlap = TRUE, col = "red") + 
-  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  ylab("Costs [million EUR]") + xlab("QALYs") +
   settings$ggplot_theme
 
 print("Outcomes depending on ED success probability parameter")
 ggplot(scen_analysis$ETRANACOGENE_success_prob$model_results, aes(x = ETRANACOGENE_QALYs_disc , y = ETRANACOGENE_cost_disc/1000000)) +
   geom_point()+
   geom_text(aes(label=ETRANACOGENE_success_prob), nudge_x = 0, nudge_y = 0, check_overlap = TRUE, col = "red") + 
-  ylab("Costs [Mio. EUR]") + xlab("QALYs") +
+  ylab("Costs [million EUR]") + xlab("QALYs") +
   settings$ggplot_theme
 
 #-------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ ggplot(scen_analysis$ETRANACOGENE_relative_bleed_reduction$model_results, aes(x 
   geom_vline(xintercept = 0) +
   scale_y_continuous(limits=c(-2,2),breaks=seq(-2,2,1)) +
   scale_x_continuous(limits=c(-2,2),breaks=seq(-2,2,1)) +
-  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  ylab("Cost Difference [million EUR]") + xlab("QALY Difference") +
   settings$ggplot_theme +
   theme(legend.position = "none")
 
@@ -101,7 +101,7 @@ ggplot(scen_analysis$ETRANACOGENE_max_bleed_reduction_duration$model_results, ae
   scale_x_continuous(limits=c(-3,3),breaks=seq(-3,3,0.5)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  ylab("Cost Difference [million EUR]") + xlab("QALY Difference") +
   settings$ggplot_theme +
   theme(legend.position = "none")
 
@@ -113,7 +113,7 @@ ggplot(scen_analysis$ETRANACOGENE_bleed_increase_per_year$model_results, aes(x =
   scale_x_continuous(limits=c(-3,3),breaks=seq(-3,3,0.5)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  ylab("Cost Difference [million EUR]") + xlab("QALY Difference") +
   settings$ggplot_theme +
   theme(legend.position = "none")
 
@@ -125,7 +125,7 @@ ggplot(scen_analysis$ETRANACOGENE_success_prob$model_results, aes(x = ETRANACOGE
   scale_x_continuous(limits=c(-3,3),breaks=seq(-3,3,0.5)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  ylab("Cost Difference [million EUR]") + xlab("QALY Difference") +
   settings$ggplot_theme +
   theme(legend.position = "none")
 
@@ -148,7 +148,7 @@ ggplot(scen_analysis$price_ETRANACOGENE$model_results, aes(y = ETRANACOGENE_PROP
   scale_x_continuous(limits=c(0,3.5),breaks=seq(0,3.5,0.5)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Incremental NMB [Mio. EUR]") + xlab("Price etranacogene dezaparvovec [Mio. EUR]") +
+  ylab("Incremental NMB [million EUR]") + xlab("Price etranacogene dezaparvovec [million EUR]") +
   settings$ggplot_theme +
   theme(legend.position = "none")
 
@@ -168,7 +168,7 @@ ggplot(scen_analysis$price_coagulation_factor_IU$model_results, aes(y = ETRANACO
   scale_x_continuous(limits=c(-0.5,3),breaks=seq(-0.5,3,0.5)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Incremental NMB [Mio. EUR]") + xlab("Price per IU of coagulation factor [EUR]") +
+  ylab("Incremental NMB [million EUR]") + xlab("Price per IU of coagulation factor [EUR]") +
   settings$ggplot_theme +
   theme(legend.position = "none")
 

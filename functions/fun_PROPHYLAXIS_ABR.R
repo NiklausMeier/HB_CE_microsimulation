@@ -5,7 +5,7 @@ fun_PROPHYLAXIS_abr <- function(model){
   
   for (i in 1:model$struct$nsim) {
     
-    # Apply treatment (3 = Prophylaxis)
+    # Apply treatment
     model[["sim"]][["PROPHYLAXIS"]][[i]][,"treatment", ]  <- 21
     
     # Apply bleed reduction from Prophylaxis in all periods for all patients in treatment arm

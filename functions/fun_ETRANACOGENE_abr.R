@@ -87,7 +87,7 @@ fun_ETRANACOGENE_abr <- function(model, mode){
       
     }
     
-    failure <- (model[["sim"]][["ETRANACOGENE"]][[1]][1,"treatment",] == 11)
+    failure <- (model[["sim"]][["ETRANACOGENE"]][[i]][1,"treatment",] == 11)
     
     #===============================================================================
     # Apply bleed reduction and calculate ABR

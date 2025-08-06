@@ -21,6 +21,14 @@ fun_resources <- function(model){
         model[["sim"]][[j]][[i]][1,"res_ETRANACOGENE",] <- 1
       }
       
+      if (names(model[["sim"]])[j] == "ETRA_PROPH") {
+        model[["sim"]][[j]][[i]][1,"res_ETRANACOGENE",] <- 1
+      }
+      
+      if (names(model[["sim"]])[j] == "ETRA_ONDEMAND") {
+        model[["sim"]][[j]][[i]][1,"res_ETRANACOGENE",] <- 1
+      }
+      
       #-------------------------------------------------------------------------------
       # Prophylaxis
       #-------------------------------------------------------------------------------
@@ -39,7 +47,7 @@ fun_resources <- function(model){
           #' Treatment 13: Etranacogene Dezaparvovec with prophylaxis
           #' Treatment 21: Prophylaxis treatment
           
-          # Check in which cycles a patient is in treatment arms 22, 24, or 31
+          # Check in which cycles a patient is in treatment arms 12, 14, or 21
           prophylaxis_cycles <- which(as.vector(model[["sim"]][[j]][[i]][,"treatment",k]) == 12 
                                       | as.vector(model[["sim"]][[j]][[i]][,"treatment",k]) == 14 
                                       | as.vector(model[["sim"]][[j]][[i]][,"treatment",k]) == 21) 

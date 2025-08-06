@@ -55,10 +55,13 @@ names(sens_analysis) <- c("Hospitalization probability","Hospitalization LOS", "
 tornado_data <- fun_tornado(sens_list = sens_analysis, 
                             outcome = "ETRANACOGENE_PROPHYLAXIS_inc_QALY", 
                             baseline = baseline_model_results[,outcome])
+
 order_parameters <- tornado_data$parameter[order(tornado_data$type, tornado_data$difference, tornado_data$parameter)]
+
 for (i in 1:length(sens_analysis)) {
     order_parameters <- order_parameters[-2]
 }
+
 min <- min(tornado_data$outcome_value)
 max <- max(tornado_data$outcome_value)
 
@@ -106,7 +109,6 @@ tornado_data[,"ymin"]          <- tornado_data[,"ymin"]/1000000
 tornado_data[,"ymax"]          <- tornado_data[,"ymax"]/1000000
 tornado_data[,"label_pos"]      <- tornado_data[,"label_pos"]/1000000
 
-
 min <- min(tornado_data$outcome_value)
 max <- max(tornado_data$outcome_value)
 
@@ -132,7 +134,7 @@ theme(axis.title.y=element_blank(),
       legend.position = 'bottom',
       legend.direction = "horizontal",
       panel.grid.major.y = element_blank()) +
-ylab("Incremental Costs [Mio. EUR]") + 
+ylab("Incremental Costs [million EUR]") + 
 scale_fill_manual(values = color_brew, labels=c("Lower Bound", "Upper Bound")) +
 coord_flip() 
 

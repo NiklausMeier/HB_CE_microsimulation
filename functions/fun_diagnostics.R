@@ -23,7 +23,6 @@ fun_diagnostics <- function(results_combined, interval, percentage){
   diagnostics <- vector(mode = "list", length = 2)
   names(diagnostics) <- c("cumulative_mean_interval","convergence")
   
-  
   #===============================================================================
   # Cumulative Means
   #===============================================================================

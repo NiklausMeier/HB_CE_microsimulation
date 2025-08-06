@@ -5,7 +5,7 @@
 # Outcome: Death Probabilities and Rates                                       #
 # Task: Use German male life tables to calculate mortality based on age        #
 # Author: Niklaus Meier                                                        #
-# R version: 4.2.1                                                             #
+# R version: 4.5.0                                                             #
 #                                                                              #
 ################################################################################
 

@@ -112,6 +112,7 @@ print("We used intervals of 1000 patients, and checked whether the running mean 
 print("A 0 means that we have reached a stable value, i.e. we have achieved convergence and have a sufficient sample size, using this interval and this percentage change as a measure of sufficient stability.")
 kbl(convergence_table, format = "simple", digits = 2, caption = "Diagnostics of convergence of running incremental outcomes over all patients in simulation")
 
+
 ```
 
 \newpage
@@ -132,7 +133,7 @@ ggplot() +
   scale_x_continuous(limits=c(-1,3),breaks=seq(-1,3,1)) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
-  ylab("Cost Difference [Mio. EUR]") + xlab("QALY Difference") +
+  ylab("Cost Difference [million EUR]") + xlab("QALY Difference") +
   settings$ggplot_theme +
   scale_color_manual(values = c("Prophylaxis"=color_brew[2])) +
   theme(axis.title.x = element_text(size = 16),

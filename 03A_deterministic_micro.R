@@ -5,7 +5,7 @@
 # Outcome: Costs, QALYS, ICER                                                  #
 # Task: Run deterministic version of model with baseline parameters            #
 # Author: Niklaus Meier                                                        #
-# R version: 4.2.1                                                             #
+# R version: 4.5.0                                                             #
 #                                                                              #
 ################################################################################
 

@@ -5,7 +5,7 @@
 # Outcome: Costs, QALYS, ICER                                                  #
 # Task: Analyze scenarios                                                      #
 # Author: Niklaus Meier                                                        #
-# R version: 4.2.1                                                             #
+# R version: 4.5.0                                                             #
 #                                                                              #
 ################################################################################
 

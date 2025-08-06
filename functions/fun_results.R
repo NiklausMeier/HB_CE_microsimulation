@@ -111,7 +111,7 @@ fun_results <- function(model, mode){
     for (i in 1:model$struct$nsim) {
       for (j in 1:length(model$sim)) {
         for (k in 1:length(outcomes))  {
-          model_outcomes[, (j-1) * length(outcomes) + k] <- colSums(model[["sim"]][[j]][[i]][,paste0(outcomes[k], "_undisc"),])
+          model_outcomes[(1 + (i-1) * model$struct$npatients) : (i * model$struct$npatients), (j-1) * length(outcomes) + k] <- colSums(model[["sim"]][[j]][[i]][,paste0(outcomes[k], "_undisc"),])
             
         }
       }
@@ -122,12 +122,11 @@ fun_results <- function(model, mode){
     for (i in 1:model$struct$nsim) {
         for (j in 1:length(model$sim)) {
           for (k in 1:length(outcomes))  {
-            model_outcomes[, (j-1) * length(outcomes) + k + length(outcomes)*length(model[["sim"]])] <- colSums(model[["sim"]][[j]][[i]][,paste0(outcomes[k], "_undisc"),] * model[["disc_factors"]][["disc_factors"]])
+            model_outcomes[(1 + (i-1) * model$struct$npatients) : (i * model$struct$npatients), (j-1) * length(outcomes) + k + length(outcomes)*length(model[["sim"]])] <- colSums(model[["sim"]][[j]][[i]][,paste0(outcomes[k], "_undisc"),] * model[["disc_factors"]][["disc_factors"]])
             
         }
       }
     }
-    
   }
   
   #===============================================================================
@@ -318,6 +317,39 @@ fun_results <- function(model, mode){
   
   model_analysis <- cbind(model_NMB, model_INMB, model_inc_QALY, model_inc_Costs, model_ICER)
   
+  
+  #===============================================================================
+  # 3. Patient characteristics
+  #===============================================================================
+  
+  # If we are looking at individual patients, extract most relevant characteristics
+  # of these patients.
+  # These are: 
+  # 1. Age start of model
+  # 2. Sex
+  # 3. Baseline ABR (individual)
+  # As these characteristics are independent of treatment assignment, only
+  # need to do this once per treatment.
+  
+  if (mode == "patient") {
+
+    model_patient_char <- setNames(data.frame(matrix(data = 0,
+                                                 nrow = model$struct$npatients*model$struct$nsim,
+                                                 ncol = 3)),
+                               c("sex", "age","baseline_abr_ind"))
+
+
+      for (i in 1:model$struct$nsim) {
+
+        model_patient_char[(1 + (i-1) * model$struct$npatients) : (i * model$struct$npatients), "sex"] <- model[["sim"]][[1]][[i]][1,"sex",]
+        model_patient_char[(1 + (i-1) * model$struct$npatients) : (i * model$struct$npatients), "age"] <- model[["sim"]][[1]][[i]][1,"age",]
+        model_patient_char[(1 + (i-1) * model$struct$npatients) : (i * model$struct$npatients), "baseline_abr_ind"] <- model[["sim"]][[1]][[i]][1,"baseline_abr",]
+
+      }
+
+  }
+  
+  
   #===============================================================================
   # Combine and Return
   #===============================================================================
@@ -345,8 +377,9 @@ fun_results <- function(model, mode){
       
     }
     
-    # We combine outcomes, analysis, and probabilistic parameters into a single data frame
-    model_results <- cbind(model_outcomes, model_analysis, simulation_parameters)
+    # We combine outcomes, patient characteristics, analysis, and probabilistic parameters into a single data frame
+    model_results <- cbind(model_outcomes, model_patient_char, model_analysis, simulation_parameters)
+
     
   }
   
