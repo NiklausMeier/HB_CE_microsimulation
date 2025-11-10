@@ -14,8 +14,8 @@ I have uploaded the model with all required R code and data for the sake of tran
 If interested, please feel free to develop the model further, e.g., by adding further treatment strategies, sources of costs, or other data sources.
 
 ## Installation
-These files can be downladed and then run by a suitable version of R. The model was mainly developed in R 4.2.1 but should be compatible with future versions, as long as the required packages do not change.  
-The following packages (and their dependencies) are required: ggplot2, RColorBrewer, pander, data.table, lookup, truncnorm, ggpubr, plyr, ggrepel, captioner, rmarkdown  
+These files can be downloaded and then run by a suitable version of R. The model was mainly developed in R 4.2.1 but should be compatible with future versions, as long as the required packages do not change.  
+The following packages (and their dependencies) are required: ggplot2, RColorBrewer, pander, data.table, lookup, truncnorm, ggpubr, plyr, ggrepel, captioner, rmarkdown, kableExtra, mgcv, grf, policytree, rpart, rpart.plot, rattle, glmnet, fastDummies, DiagrammeRsvg, broom, flextable, scales, dplyr, MASS, rsvg, knitr
 These packages are installed and loaded in automatically when running the '00_master_file.R' script.  
 
 ## Usage
@@ -44,7 +44,12 @@ In the main folder of the project folder, there are multiple numbered scripts wh
 •	**05A_univariate_sensitivity_analysis.R:** This script executes the deterministic model while altering individual parameters based on their probabilistic distributions.  
 •	**05B_analyze_ univariate_sensitivity_analysis.Rmd:** This script creates a word file analyzing the most important output of the univariate sensitivity analysis.  
 •	**06A_scenarios.R:** This script executes the deterministic model while altering individual parameters in a range and at intervals that are defined by the user to evaluate various scenarios.  
-•	**06B_analyze_scenarios.Rmd:** This script creates a word file analyzing the most important output of the scenario analysis.  
+•	**06B_analyze_scenarios.Rmd:** This script creates a word file analyzing the most important output of the scenario analysis.
+•	**07A_decision_rules.R:** This script uses the probabilistic microsimulation model as the basis for finding optimal individualized treatment as decision rules.
+•	**07B_analyze_decision_rules.Rmd:** This script creates a word file showing the results of the decision rules.
+•	**08A_decision_rules_sc1.R:** This script runs scenario 1 for the decision rules - death as random event.
+•	**08B_decision_rules_sc2.R:** This script runs scenario 2 for the decision rules - automatic treatment success.
+•	**08C_analyze_decision_rules_scenarios.Rmd:** This script creates a word file showing the results of the decision rule scenarios.
 
 These scripts, rather than duplicating the code for the model across the scripts, run a set of (mostly) identical functions, which contain the actual code that runs the model. This means that if the functions are altered, all of the scripts for the running of the model will be running this altered function, and the code does not need to be modified in multiple places.  
 
@@ -71,12 +76,20 @@ The functions are loaded into R in the 00_master_file.R script. Most of these fu
 •	**fun_discounting.R:** This function multiplies undiscounted outcomes (life-years, QALYS, and costs) with the discount factor for that cycle to calculate the discounted outcome.  
 
  *Functions to analyze results:*   
-•	**fun_results.R:** this function summarizes and saves the results of the model into a separate data frame. It also calculates incremental QALYs, costs, NMB, and ICER. It can be run in two modes: “simulation” and “patient”.  
+•	**fun_results.R:** This function summarizes and saves the results of the model into a separate data frame. It also calculates incremental QALYs, costs, NMB, and ICER. It can be run in two modes: “simulation” and “patient”.  
   **Simulation:** This mode saves the results of each simulation, aggregated from all patients in that simulation. This is especially important for the probabilistic analysis due to memory constraints when simulating a large number of patients.  
   **Patient:** This mode saves the results of each patient, across all simulations. For this to work properly, the function must be run after each individual simulation.  
 •	**fun_diagnostics.R:** This function tracks the cumulative means of outcomes (across patients or simulations) and checks whether their values are reaching a stable convergence.  
 •	**fun_diagnostics_plots.R:** This function generates plots for the cumulative means from the diagnostics to check for convergence visually.  
 •	**fun_tornado.R:** This function generates a tornado plot based on a univariate sensitivity analysis from the “05A_univariate_sensitivity_analysis.R” script. For this, the user must input the results of the sensitivity analysis, the outcome which should be analyzed, and the baseline values of the results.  
+
+ *Functions to individualize treatment via decision rules:*
+•	**fun_opt_treat.R:** This function generates the data structure needed for the decision rules. It also determines optimal treatment assignment based on counterfactuals for each individual patient, based on QALYs, costs, or NMB.
+•	**fun_LASSO.R:** This function analyzes the microsimulation data via LASSO regression and determines optimal treatment assignment based on this regression.
+•	**fun_policy_tree.R:** This function generates a policy tree based on the microsimulation data.
+•	**fun_rpart.R:** This function analyzes the microsimulation data via recursive partitioning and determines the optimal treatment assignment based on classification tree
+•	**fun_var_combinations.R:** This function creates a matrix of all possible variable combinations of all thresholds found in the recursive partitioned decision tree. In this matrix, each row is one combination of unique values for each decision node in the tree.
+•	**fun_rpart_prob.R:** This function analyzes the input parameter uncertainty of the decision rules from recursive partitioning, based on the probabilistic analysis.
 
 An example of the R code utilizing these functions in order for the deterministic analysis would look like this:  
 
@@ -102,12 +115,12 @@ baseline_patient_results <- fun_results(model, mode = "patient")
 baseline_model_results  <- fun_results(model, mode = "simulation")  
 
 ## Support
-If you have issues executing the code, or have other questions, please contact me at niklaus.meier@unibas.ch or meier.niklaus@gmail.com
+If you have issues executing the code, or have other questions, please contact me at niklaus.meier@bfh.ch or meier.niklaus@gmail.com
 
 ## Authors and acknowledgment
 Main developer: Niklaus Meier   
 Code review: Katya Galactionova   
-Further contributions to underlying theoretical work and publication: Hendrik Fuchs, Cedric Hermans, Mark Pletscher, Matthias Schwenkglenks   
+Further contributions to underlying theoretical work and publication: Hendrik Fuchs, Cedric Hermans, Mark Pletscher, Matthias Schwenkglenks, Ana Cecilia Quiroga Gutierrez   
 
 ## License
 GNU GENERAL PUBLIC LICENSE  
@@ -115,3 +128,4 @@ Version 3, 29 June 2007
 
 ## Project status
 This model is currently complete, but may receive updates and further functionalities in the future.
+UPDATE 1: Added scripts 07A, 07B, 08A, 08B, and 08C as well as relevant functions. These scripts and functions are for finding optimal individualized treatment as decision rules based on the probabilistic microsimulation model.
